@@ -1,17 +1,25 @@
-library(here)
-library(RSQLite)
-library(readr)
-
-get_db_location = function() {
-  db_folder = file.path(dirname(here()), "db")
+#' initialises empty db file
+#'
+#' @return
+#' @export
+init_db_file = function() {
+  db_loc = get_db_location()
+  db_folder = dirname(db_loc)
   if (!dir.exists(db_folder)) dir.create(db_folder, 
                                          showWarnings = FALSE, 
                                          recursive = TRUE)
-  db_file = "data.db"
-  db_fpfn = file.path(db_folder, db_file)
-  return(db_fpfn)
+  if (file.exists(db_loc)) {
+    file_backup(db_loc) 
+    file.remove(db_loc)
+  }
+  file.create(db_loc)
 }
 
+
+#' will create an empty sqlite database with the required tables
+#'
+#' @return
+#' @export
 init_database = function() {
   db_fpfn = get_db_location()
   con <- dbConnect(RSQLite::SQLite(), db_fpfn)
@@ -19,7 +27,7 @@ init_database = function() {
   # create an empty table for stock profiles
   init_stock_profiles_table(con)
   
-  # create an empty table for ohlc data
+  # create an empty table for OHLC data
   init_ohlc_table(con)
   
   # create an empty table for portfolio
@@ -28,7 +36,15 @@ init_database = function() {
   dbDisconnect(con)
 }
 
+
+#' will create the stock_profiles_table
+#'
+#' @param con connection to db
+#'
+#' @return
+#' @export
 init_stock_profiles_table = function(con) {
+
   # s = as.data.table(
   #   list(
   #     symbol = character(0),
@@ -63,9 +79,20 @@ init_stock_profiles_table = function(con) {
   	website	TEXT,
   	PRIMARY KEY(symbol)
   );'
+  
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
   dbExecute(con, query)
+  dbDisconnect(con)
 }
 
+
+#' will create the ohlc_table
+#'
+#' @param con connection to db 
+#'
+#' @return
+#' @export
 init_ohlc_table = function(con) {
   # s = as.data.table(
   #   list(
@@ -92,7 +119,21 @@ init_ohlc_table = function(con) {
     "adjusted"	REAL,
     PRIMARY KEY("symbol", "date")
   );'
+  
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
   dbExecute(con, query)
-  
-  
+  dbDisconnect(con)
 }
+
+##############################
+# INIT ROUTINE
+##############################
+
+library(here)
+library(RSQLite)
+library(readr)
+
+init_db_file()
+init_stock_profiles_table()
+init_ohlc_table()

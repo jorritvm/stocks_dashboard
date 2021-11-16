@@ -1,3 +1,8 @@
+##############################
+# EXAMPLE SHINY APPS 
+##############################
+
+
 library(quantmod)
 library(shiny)
 
@@ -114,3 +119,29 @@ shinyApp(
     })
   }
 )
+
+# exercise 6
+# https://bookdown.org/weicheng/shinyTutorial/reactive-programming.html
+library(shiny)
+shinyApp(ui = fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("nrows",
+                  "Number of rows:",
+                  min = 1,
+                  max = 50,
+                  value = 10)
+    ),
+    mainPanel(
+      plotOutput("carsPlot"),
+      tableOutput("carsTable")
+    )
+  )
+), server = function(input, output) {
+  output$carsPlot <- renderPlot({
+    plot(head(cars, input$nrows))
+  })
+  output$carsTable <- renderTable({
+    head(cars, input$nrows)
+  })
+})
