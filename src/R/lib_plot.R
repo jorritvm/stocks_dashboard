@@ -98,6 +98,15 @@ plot_benchmark = function(sym,
   return(fig)
 }
 
+plot_fx = function(fx, window) {
+  # translate window to start & end days
+  w = window_to_start_end_dates(window)
+  
+  # get ohlc data
+  data = get_fx(fx, w$start, w$end)
+  
+  # plotly
+  fig <- data %>% plot_ly(x = ~date,  line = list(color = 'black', width = 0.75), y = ~rate) 
 
-
-
+  return(fig)
+}

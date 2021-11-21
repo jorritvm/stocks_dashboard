@@ -87,7 +87,7 @@ init_stock_profiles_table = function(con) {
 }
 
 
-#' will create the ohlc_table
+#' will create the ohlc table
 #'
 #' @param con connection to db 
 #'
@@ -126,6 +126,43 @@ init_ohlc_table = function(con) {
   dbDisconnect(con)
 }
 
+
+#' will create the fx_rates table
+#'
+#' @param con connection to db 
+#'
+#' @return
+#' @export
+init_fxrate_table = function(con) {
+  # s = as.data.table(
+  #   list(
+  #     date = character(0),
+  #     Open = numeric(0),
+  #     High = numeric(0),
+  #     Low = numeric(0),
+  #     Close = numeric(0),
+  #     Volume = numeric(0),
+  #     Adjusted = numeric(0)
+  #   )
+  # )
+  # dbCreateTable(con, "stock_ohlc", s)
+  
+  query = '
+    CREATE TABLE fx_rates (
+      fx	TEXT,
+      date	TEXT,
+      rate	real,
+      PRIMARY KEY("fx","date")
+    );'
+  
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  dbExecute(con, query)
+  dbDisconnect(con)
+}
+
+
+
 ##############################
 # INIT ROUTINE
 ##############################
@@ -134,6 +171,7 @@ library(here)
 library(RSQLite)
 library(readr)
 
-init_db_file()
-init_stock_profiles_table()
-init_ohlc_table()
+# init_db_file()
+# init_stock_profiles_table()
+# init_ohlc_table()
+# init_fxrate_table()

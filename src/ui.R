@@ -32,12 +32,27 @@ body = dashboardBody(
               tabPanel("Plot",
                        box(
                          selectInput("fx_symbol", "Select exchange rate", ""),
+                         radioButtons("fx_window",
+                                      "",
+                                      choices = list("All"= "all",
+                                                     "5Y" = "5Y",
+                                                     "3Y" = "3Y",
+                                                     "2Y" = "2Y",
+                                                     "1Y" = "1Y",
+                                                     "YTD" = "YTD",
+                                                     "6M" = "6M",
+                                                     "3M" = "3M",
+                                                     "1M" = "1M",
+                                                     "2W" = "2W",
+                                                     "1W" = "1W"),
+                                      selected = "YTD",
+                                      inline = TRUE),
                          title = "Input", status = "primary", solidHeader = TRUE, width = 12
                        ),
                        box(
                          plotlyOutput("fx_plot"),
                          DTOutput("fx_table"),
-                         title = "Profile", status = "info", solidHeader = TRUE, width = 12
+                         title = "FOREX rate", status = "info", solidHeader = TRUE, width = 12
                        )
               ),
               
@@ -62,7 +77,7 @@ body = dashboardBody(
                        )),
               tabPanel("Update",
                        box(
-                         actionButton("update_fx", label = "Update FX data", icon("sync")),
+                         actionButton("update_fx_btn", label = "Update FX data", icon("sync")),
                          title = "Action", status = "primary", solidHeader = TRUE, width = 6
                        ),
                        box(
