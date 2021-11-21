@@ -21,6 +21,7 @@ get_stock_profiles = function() {
   
   # query
   result = tbl(con, "stock_profiles") %>%
+    arrange(symbol) %>%
     as_tibble()
   
   # close
@@ -191,6 +192,11 @@ get_latest_close = function() {
   
 }
 
+
+#' for all stocks, add the OHLC data between latest update & today to the DB
+#'
+#' @return
+#' @export
 update_all_ohlc = function() {
   # open the db connection
   db_fpfn = get_db_location()
@@ -215,6 +221,4 @@ update_all_ohlc = function() {
   
   # close
   dbDisconnect(con)  
-  
-  
 }

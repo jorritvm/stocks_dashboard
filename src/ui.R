@@ -7,7 +7,8 @@ sidebar = dashboardSidebar(
     menuItem("Home", tabName = "home"),
     menuItem("Stocks list", tabName = "stocks_list"),
     menuItem("Stocks data", tabName = "stocks_data"),
-    menuItem("Portfolio", tabName = "portfolio")
+    menuItem("Portfolio", tabName = "portfolio"),
+    actionButton("debug_btn", label = "debug")
   )
 )
 
@@ -71,7 +72,8 @@ body = dashboardBody(
     
     tabItem(tabName = "stocks_data",
             box(
-              selectInput("plot_stock_symbol", "", ""),
+              selectInput("plot_stock_symbol", "Stock", ""),
+              selectInput("plot_stock_benchmark", "Benchmark", ""),
               radioButtons("plot_stock_window",
                            "",
                            choices = list("All"= "all",
@@ -100,3 +102,4 @@ ui = dashboardPage(header,
                    sidebar, 
                    body, 
                    skin = "green")
+

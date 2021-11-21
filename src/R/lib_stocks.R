@@ -117,6 +117,12 @@ get_ohlc_from_api = function(symbol, start_date, end_date) {
 }
 
 
+#' returns a data.frame of with limited key info on all stocks in our DB
+#'
+#' @param profiles 
+#'
+#' @return
+#' @export 
 get_stock_key_info = function(profiles) {
   # filter some columns
   result = profiles %>% 
@@ -137,6 +143,12 @@ get_stock_key_info = function(profiles) {
 }
 
 
+#' returns a key-value (2 column) table with profile information on a stock
+#'
+#' @param sym string stock symbol
+#'
+#' @return
+#' @export
 get_stock_profile_table = function(sym) {
   p_all = get_stock_profiles()
   p_one = p_all %>% 
@@ -147,7 +159,15 @@ get_stock_profile_table = function(sym) {
 }
   
 
-plot_stock_evolution = function(sym, 
+#' create a plot that shows a stock versus a benchmark
+#'
+#' @param sym 
+#' @param window 
+#'
+#' @return
+#' @export
+plot_stock_evolution = function(sym,
+                                bench,
                                 window) {
   
   print(sym)
