@@ -31,6 +31,45 @@ get_stock_profiles = function() {
 }
 
 
+#' returns a key-value (2 column) table with profile information on a stock
+#'
+#' @param sym string stock symbol
+#'
+#' @return
+#' @export
+get_stock_profile_table = function(sym) {
+  p_all = get_stock_profiles()
+  p_one = p_all %>% 
+    filter(symbol == sym)
+  p_one_transpose = as_tibble(cbind(nms = names(p_one), t(p_one)))
+  names(p_one_transpose) = c("parameter", "value")
+  return(p_one_transpose)
+}
+
+
+#' returns a data.frame of with limited key info on all stocks in our DB
+#'
+#' @param profiles 
+#'
+#' @return
+#' @export 
+get_stock_key_info = function(profiles) {
+  # filter some columns
+  result = profiles %>% 
+    select(exchange_name, symbol, company_name, currency) %>%
+    rename(exchange = exchange_name, company = company_name)
+  
+  # get latest close data
+  close_data = get_latest_close()
+  
+  # join
+  result = result %>% inner_join(close_data, by = "symbol")
+  
+  return(result)
+  
+}
+
+
 #' safely write a new stock profile to the DB, if a record with the same symbol
 #' already exists it first deletes the old info, then adds the new data, in
 #' order to avoid duplicates
@@ -65,6 +104,14 @@ safe_write_stock_profile = function(profile) {
 }
 
 
+#' returns OHLC data for the requested symbol(s)
+#'
+#' @param sym single symbol string or vector of multiple symbols
+#' @param start date
+#' @param end date
+#'
+#' @return tibble
+#' @export
 get_ohlc = function(sym, start = NULL, end = NULL) {
   # open the db connection
   db_fpfn = get_db_location()
@@ -72,7 +119,7 @@ get_ohlc = function(sym, start = NULL, end = NULL) {
   
   # use some dplyr for the select query
   result = tbl(con, "stock_ohlc") %>%
-            filter(symbol == sym) %>%
+            filter(symbol %in% sym) %>%
             as_tibble()
   result = result %>%
            mutate(date = ymd(date))
@@ -193,32 +240,4 @@ get_latest_close = function() {
 }
 
 
-#' for all stocks, add the OHLC data between latest update & today to the DB
-#'
-#' @return
-#' @export
-update_all_ohlc = function() {
-  # open the db connection
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  
-  # loop all stocks
-  latest_close = get_latest_close()
-  for (i in 1:nrow(latest_close)) {
-    
-    symbol = unlist(latest_close[i, "symbol"])
-    start_date = ymd(latest_close[i, "latest_close"])
-    end_date = today()
-    
-    if ((end_date - start_date) > 1) {
-      new_ohlc_data = get_ohlc_from_api(symbol, start_date + days(1), end_date)     
-      new_ohlc_data = new_ohlc_data %>% mutate(date = format_ISO8601(date))
-      
-      # write the record  
-      dbAppendTable(con, "stock_ohlc", new_ohlc_data)
-    }
-  }
-  
-  # close
-  dbDisconnect(con)  
-}
+

@@ -1,6 +1,7 @@
 library(here)
 library(shiny)
 library(shinydashboard)
+library(reactlog)
 library(readr)
 library(RSQLite)
 library(dplyr)

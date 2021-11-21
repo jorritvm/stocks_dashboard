@@ -1,4 +1,6 @@
 source("load_libraries.R")
+options(shiny.maxRequestSize = 30*1024^2) # 30 MB 
+reactlog_enable()
 
 server = function(input, output, session) {
   
@@ -100,18 +102,38 @@ server = function(input, output, session) {
   })
 
   ################################  
-  ### PAGE: SHOW STOCK GRAPH
+  ### PAGE: CANDLESTICK
   # update input list 
   observe({ updateSelectInput(session, 
-                              "plot_stock_symbol", 
+                              "cs_symbol", 
                               label = NULL, 
                               choices = rv$profiles$symbol)
   })
   # update plot
-  output$plot_stock_plot = renderPlotly({plot_stock_evolution(input$plot_stock_symbol,
-                                                              input$plot_stock_benchmark,
-                                                              input$plot_stock_window)
+  output$cs_plot = renderPlotly({plot_candlestick(input$cs_symbol,
+                                                              input$cs_window)
                                         })
 
+  ################################  
+  ### PAGE: BENCHMARK
+  # update input list 
+  observe({ updateSelectInput(session, 
+                              "bench_symbol", 
+                              label = NULL, 
+                              choices = rv$profiles$symbol)
+  })
+  observe({   def = NULL
+              if ("IWDA.AS" %in% rv$profiles$symbol) def = "IWDA.AS"
+              updateSelectInput(session, 
+                              "bench_base", 
+                              label = NULL, 
+                              choices = rv$profiles$symbol,
+                              selected = def)
+  })
+  # update plot
+  output$bench_plot = renderPlotly({plot_benchmark(input$bench_symbol,
+                                                   input$bench_base,
+                                                   input$bench_window)
+  })
 }
 

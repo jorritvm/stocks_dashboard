@@ -117,99 +117,32 @@ get_ohlc_from_api = function(symbol, start_date, end_date) {
 }
 
 
-#' returns a data.frame of with limited key info on all stocks in our DB
-#'
-#' @param profiles 
-#'
-#' @return
-#' @export 
-get_stock_key_info = function(profiles) {
-  # filter some columns
-  result = profiles %>% 
-    select(exchange_name, symbol, company_name, currency) %>%
-    rename(exchange = exchange_name, company = company_name)
-  
-  # get latest close data
-  close_data = get_latest_close()
-  print(close_data)
-  
-  # join
-  result = result %>% inner_join(close_data, by = "symbol")
-
-  print(result)
-  
-  return(result)
- 
-}
-
-
-#' returns a key-value (2 column) table with profile information on a stock
-#'
-#' @param sym string stock symbol
+#' for all stocks, add the OHLC data between latest update & today to the DB
 #'
 #' @return
 #' @export
-get_stock_profile_table = function(sym) {
-  p_all = get_stock_profiles()
-  p_one = p_all %>% 
-            filter(symbol == sym)
-  p_one_transpose = as_tibble(cbind(nms = names(p_one), t(p_one)))
-  names(p_one_transpose) = c("parameter", "value")
-  return(p_one_transpose)
-}
+update_all_ohlc = function() {
+  # open the db connection
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
   
-
-#' create a plot that shows a stock versus a benchmark
-#'
-#' @param sym 
-#' @param window 
-#'
-#' @return
-#' @export
-plot_stock_evolution = function(sym,
-                                bench,
-                                window) {
-  
-  print(sym)
-  print(window)
-  # translate window to start & end days
-  end = today()
-  if (window == "all") start = NULL
-  if (window == "5Y") start = today() - years(5)
-  if (window == "3Y") start = today() - years(3)
-  if (window == "2Y") start = today() - years(2)
-  if (window == "1Y") start = today() - years(1)
-  if (window == "6M") start = today() - months(6)
-  if (window == "3M") start = today() - months(3)
-  if (window == "1M") start = today() - months(1)
-  if (window == "2W") start = today() - weeks(2)
-  if (window == "1W") start = today() - weeks(1)
-  if (window == "YTD") start = ymd(paste0(year(today()), "-01-01"))
-  
-  # get ohlc data
-  data = get_ohlc(sym, start, end)
-  start = min(data$date)
-  
-  # ggplot
-  # fig = ggplot(data, aes(x = date, y = close)) +
-  #       geom_line(size = 1.5) + 
-  #       geom_candlestick(aes(open = open, 
-  #                            high = high, 
-  #                            low = low, 
-  #                            close = close),
-  #                        alpha = 0.7) +  
-  #       scale_x_date(date_breaks = "1 month", 
-  #                   limits = c(start, end),
-  #                   expand = c(0,0))
-  
-  # plotly
-  fig <- data %>% plot_ly(x = ~date, type="candlestick",
-                        open = ~open, close = ~close,
-                        high = ~high, low = ~low) 
-  fig <- fig %>% layout(xaxis = list(rangeslider = list(visible = F)))
-  fig <- fig %>% add_lines(x = ~date, y = ~close, line = list(color = 'black', width = 0.75), inherit = FALSE)
-  fig <- fig %>% layout(showlegend = FALSE)
-  
+  # loop all stocks
+  latest_close = get_latest_close()
+  for (i in 1:nrow(latest_close)) {
     
-  return(fig)
+    symbol = unlist(latest_close[i, "symbol"])
+    start_date = ymd(latest_close[i, "latest_close"])
+    end_date = today()
+    
+    if ((end_date - start_date) > 1) {
+      new_ohlc_data = get_ohlc_from_api(symbol, start_date + days(1), end_date)     
+      new_ohlc_data = new_ohlc_data %>% mutate(date = format_ISO8601(date))
+      
+      # write the record  
+      dbAppendTable(con, "stock_ohlc", new_ohlc_data)
+    }
+  }
+  
+  # close
+  dbDisconnect(con)  
 }
