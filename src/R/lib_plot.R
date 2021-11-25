@@ -98,6 +98,14 @@ plot_benchmark = function(sym,
   return(fig)
 }
 
+
+#' create a plot for an FX
+#'
+#' @param fx string identifier for FX
+#' @param window string representation of time window
+#'
+#' @return
+#' @export
 plot_fx = function(fx, window) {
   # translate window to start & end days
   w = window_to_start_end_dates(window)

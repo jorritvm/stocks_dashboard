@@ -195,7 +195,7 @@ update_all_fx = function() {
   latest_fx = get_latest_fx()
   for (i in 1:nrow(latest_fx)) {
     
-    symbol = unlist(latest_fx[i, "fx"])
+    fx = unlist(latest_fx[i, "fx"])
     start_date = ymd(latest_fx[i, "latest_fx_date"])
     end_date = today()
     

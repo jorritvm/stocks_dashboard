@@ -9,11 +9,73 @@ get_db_location = function() {
   return(db_loc)
 }
 
+#######################
+# FX
+#######################
+
+#' returns FX data for the requested symbol(s)
+#'
+#' @param sym single symbol string or vector of multiple symbols
+#' @param start date
+#' @param end date
+#'
+#' @return tibble
+#' @export
+get_fx = function(fx_symbol, start = NULL, end = NULL) {
+  fx_symbol = toupper(fx_symbol)
+  
+  # open the db connection
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  
+  # use some dplyr for the select query
+  result = tbl(con, "fx_rates") %>%
+    filter(fx %in% fx_symbol) %>%
+    as_tibble()
+  result = result %>%
+    mutate(date = ymd(date))
+  result
+  if (!is.null(start)) {
+    result = result %>% 
+      filter(date >= start)
+  }
+  if (!is.null(end)) {
+    result = result %>% 
+      filter(date <= end)
+  } 
+  
+  # select the symbols already in the data table
+  dbDisconnect(con)  
+  
+  return(result)
+}
+
+
+#' returns a small table with for each fx the latest date & value
+#'
+#' @return
+#' @export
+get_latest_fx = function() {
+  # open the db connection
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  
+  result = dbGetQuery(con, 
+                      'SELECT fx, rate, max(date) as latest_fx_date
+                      FROM fx_rates 
+                      GROUP BY fx') %>% as_tibble()
+  
+  # select the symbols already in the data table
+  dbDisconnect(con)  
+  
+  return(result)
+  
+}
 
 #' safely write a fxdata to the DB, if part of the fx history already exists
 #' it first deletes the old info, then adds the new data, in order to avoid duplicates
 #'
-#' @param fx data.table
+#' @param fx data.table containing fx, date, rate columns
 #'
 #' @return
 #' @export
@@ -79,41 +141,9 @@ remove_fx_from_db = function(fx) {
 }
 
 
-#' returns FX data for the requested symbol(s)
-#'
-#' @param sym single symbol string or vector of multiple symbols
-#' @param start date
-#' @param end date
-#'
-#' @return tibble
-#' @export
-get_fx = function(fx_symbol, start = NULL, end = NULL) {
-  # open the db connection
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  
-  # use some dplyr for the select query
-  result = tbl(con, "fx_rates") %>%
-    filter(fx %in% fx_symbol) %>%
-    as_tibble()
-  result = result %>%
-    mutate(date = ymd(date))
-  result
-  if (!is.null(start)) {
-    result = result %>% 
-      filter(date >= start)
-  }
-  if (!is.null(end)) {
-    result = result %>% 
-      filter(date <= end)
-  } 
-  
-  # select the symbols already in the data table
-  dbDisconnect(con)  
-  
-  return(result)
-}
-
+#############################################
+# stock profiles
+#############################################
 
 #' read the stock profiles table in its entirety
 #'
@@ -205,9 +235,13 @@ safe_write_stock_profile = function(profile) {
   df = as.data.frame(profile)
   dbAppendTable(con, "stock_profiles", df)
   
+  # close
   dbDisconnect(con)  
 }
 
+#############################################
+# stock OHLC
+#############################################
 
 #' returns OHLC data for the requested symbol(s)
 #'
@@ -238,7 +272,7 @@ get_ohlc = function(sym, start = NULL, end = NULL) {
       filter(date <= end)
   } 
   
-  # select the symbols already in the data table
+  # close
   dbDisconnect(con)  
   
   return(result)
@@ -284,7 +318,7 @@ safe_write_ohlc_data = function(ohlc) {
   ohlc = ohlc[, date := format_ISO8601(date)]
   dbAppendTable(con, "stock_ohlc", ohlc)
   
-  # select the symbols already in the data table
+  # close
   dbDisconnect(con)  
 }
 
@@ -316,7 +350,7 @@ remove_stock_from_db = function(symbol) {
                 symbol = ?'
   dbExecute(con, query, params = list(symbol))
   
-  # select the symbols already in the data table
+  # close
   dbDisconnect(con)  
 }
 
@@ -335,32 +369,54 @@ get_latest_close = function() {
                       FROM stock_ohlc 
                       GROUP BY symbol') %>% as_tibble()
   
-  # select the symbols already in the data table
+  # close
   dbDisconnect(con)  
   
   return(result)
   
 }
 
-
-#' returns a small table with for each fx the latest date & value
-#'
-#' @return
-#' @export
-get_latest_fx = function() {
+#############################################
+# transactions
+#############################################
+get_transactions = function() {
   # open the db connection
   db_fpfn = get_db_location()
   con <- dbConnect(RSQLite::SQLite(), db_fpfn)
   
-  result = dbGetQuery(con, 
-                      'SELECT fx, rate, max(date) as latest_fx_date
-                      FROM fx_rates 
-                      GROUP BY fx') %>% as_tibble()
+  tr = dbReadTable(con, "transactions")
+  tr = tr %>% mutate(date = ymd(date)) %>% arrange(date)
+    
+  # close
+  dbDisconnect(con)  
+  
+  return(tr)
+}
+
+#' safely write a transaction data to the DB, if part of the transactions already exist
+#' it first deletes the old info, then adds the new data, in order to avoid duplicates
+#'
+#' @param tr data.table containing symbol, date, type, amount, money columns
+#'
+#' @return
+#' @export
+safe_write_transaction_data = function(tr) {
+  # open the db connection
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  
+  # get all pre-existing transactions in the DB
+  all_tr = get_transactions()
+  
+  # drop new entries that are already in the DB - use dplyr
+  safe_tr = anti_join(tr, 
+                      all_tr, 
+                      by = c("symbol", "date", "type", "amount", "money"))
+  
+  # write new records
+  safe_tr = safe_tr[, date := format_ISO8601(date)]
+  dbAppendTable(con, "transactions", safe_tr)
   
   # select the symbols already in the data table
   dbDisconnect(con)  
-  
-  return(result)
-  
 }
-

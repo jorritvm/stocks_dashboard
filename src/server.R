@@ -15,7 +15,8 @@ server = function(input, output, session) {
                       profiles = get_stock_profiles(),
                       added_symbol = "",
                       removed_symbol = "",
-                      updated_ohlc = FALSE)
+                      updated_ohlc = FALSE,
+                      tr = get_transactions())
   
   ################################
   ### PAGE: LIST ALL FX
@@ -105,8 +106,8 @@ server = function(input, output, session) {
     rv$updated_fx = rv$updated_fx + 1
   })
   # update status text
-  output$update_ohlc_text = renderText({
-    req(rv$updated_ohlc)
+  output$update_fx_text = renderText({
+    req(rv$updated_fx)
     "FX data updated for all stocks in the DB."
   })
 
@@ -232,6 +233,22 @@ server = function(input, output, session) {
   output$bench_plot = renderPlotly({plot_benchmark(input$bench_symbol,
                                                    input$bench_base,
                                                    input$bench_window)
+  })
+  
+  ################################  
+  ### PAGE: list all transactions
+  output$transactions_table = renderDT(rv$tr)
+  
+  
+  ################################  
+  ### PAGE: batch upload transactions
+  observe({ 
+    req(input$batch_portfolio_file)
+    dt = as.data.table(read.xlsx(input$batch_portfolio_file$datapath))
+    file_source = "saxo"
+    # check if it is a saxo file
+    if (file_source == "saxo") import_saxo_transaction_log(dt)
+    
   })
 }
 

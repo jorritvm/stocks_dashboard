@@ -193,19 +193,23 @@ body = dashboardBody(
     tabItem(tabName = "portfolio",
             navbarPage(
               title = "",
-              
+              tabPanel("Transactions",
+                       DTOutput("transactions_table")
+                       ),
               tabPanel("Batch upload",
                        box(
-                         tags$p("Upload an excel file with at least these named columns:"),
+                         tags$p("Upload an excel file with at these named columns:"),
                          tags$ol(
-                           tags$li("symbol: yahoo ticker"), 
-                           tags$li("date: use ISO8601 date format"), 
-                           tags$li("amount: can be positive (buy) or negative (sell)")
+                           tags$li(HTML("<b>symbol:</b> yahoo ticker")), 
+                           tags$li(HTML("<b>date:</b> date of transaction using ISO8601 date format")),
+                           tags$li(HTML("<b>type:</b> should be 'buy', 'sell' or 'div'")), 
+                           tags$li(HTML("<b>amount:</b> amount of shares")),
+                           tags$li(HTML("<b>money:</b> total revenue/cost of the transaction")),
+                           tags$li(HTML("<b>currency:</b> 3 letter abbreviation for the currency of the money column"))
                          ),
-                         tags$p("In addition you can add columns:"),
-                         tags$ol(
-                           tags$li("price: net price (use stock currency) - if not provided default will be 'close price'") 
-                         ),
+                         tags$p("For amount & money, the sign will not matter, type is used to determine sign."),
+                         tags$p("If money is not given for a buy or sell order, closing price will be used."),
+                         tags$p("If currency is not given, original stock currency will be used."),
                          title = "Readme", status = "info", solidHeader = TRUE, width = 12
                        ),
                        box(

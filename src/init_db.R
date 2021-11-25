@@ -163,6 +163,54 @@ init_fxrate_table = function(con) {
 
 
 
+#' will create the transactions table
+#'
+#' @param con connection to db 
+#'
+#' @return
+#' @export
+init_transactions_table = function(con) {
+  # s = as.data.table(
+  #   list(
+  #     date = character(0),
+  #     Open = numeric(0),
+  #     High = numeric(0),
+  #     Low = numeric(0),
+  #     Close = numeric(0),
+  #     Volume = numeric(0),
+  #     Adjusted = numeric(0)
+  #   )
+  # )
+  # dbCreateTable(con, "stock_ohlc", s)
+  
+  query = '
+    CREATE TABLE transactions (
+  symbol	TEXT,
+  date	TEXT,
+  type	TEXT,
+  amount	REAL,
+  money REAL
+);'
+  
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  dbExecute(con, query)
+
+  dbDisconnect(con)
+}
+
+
+# todo
+# CREATE TABLE "saxo_map" (
+#   "saxo"	TEXT,
+#   "yahoo"	TEXT,
+#   PRIMARY KEY("saxo","yahoo")
+# )
+
+
+
+
+
 ##############################
 # INIT ROUTINE
 ##############################
@@ -175,3 +223,6 @@ library(readr)
 # init_stock_profiles_table()
 # init_ohlc_table()
 # init_fxrate_table()
+# init_transactions_table()
+
+
