@@ -1,146 +1,3 @@
-#' returns the location of the sqlite database as a file path string
-#'
-#' @return
-#' @export
-get_db_location = function() {
-  db_loc = file.path(dirname(here()), 
-                     "db",
-                     "data.db")
-  return(db_loc)
-}
-
-#######################
-# FX
-#######################
-
-#' returns FX data for the requested symbol(s)
-#'
-#' @param sym single symbol string or vector of multiple symbols
-#' @param start date
-#' @param end date
-#'
-#' @return tibble
-#' @export
-get_fx = function(fx_symbol, start = NULL, end = NULL) {
-  fx_symbol = toupper(fx_symbol)
-  
-  # open the db connection
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  
-  # use some dplyr for the select query
-  result = tbl(con, "fx_rates") %>%
-    filter(fx %in% fx_symbol) %>%
-    as_tibble()
-  result = result %>%
-    mutate(date = ymd(date))
-  result
-  if (!is.null(start)) {
-    result = result %>% 
-      filter(date >= start)
-  }
-  if (!is.null(end)) {
-    result = result %>% 
-      filter(date <= end)
-  } 
-  
-  # select the symbols already in the data table
-  dbDisconnect(con)  
-  
-  return(result)
-}
-
-
-#' returns a small table with for each fx the latest date & value
-#'
-#' @return
-#' @export
-get_latest_fx = function() {
-  # open the db connection
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  
-  result = dbGetQuery(con, 
-                      'SELECT fx, rate, max(date) as latest_fx_date
-                      FROM fx_rates 
-                      GROUP BY fx') %>% as_tibble()
-  
-  # select the symbols already in the data table
-  dbDisconnect(con)  
-  
-  return(result)
-  
-}
-
-#' safely write a fxdata to the DB, if part of the fx history already exists
-#' it first deletes the old info, then adds the new data, in order to avoid duplicates
-#'
-#' @param fx data.table containing fx, date, rate columns
-#'
-#' @return
-#' @export
-safe_write_fx_data = function(dt_fx) {
-  # open the db connection
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  
-  # drop database queries that are overlapping
-  fx = dt_fx[1, fx]
-  from_date = unlist(dt_fx[, .(format_ISO8601(min(date)))])
-  to_date   = unlist(dt_fx[, .(format_ISO8601(max(date)))])
-  query = 'SELECT 
-              * 
-           FROM 
-              fx_rates 
-           WHERE 
-              fx = ? 
-           AND 
-              date BETWEEN ? AND ?'
-  t = dbGetQuery(con, query, params = list(fx, from_date, to_date))
-  if (nrow(t) > 0) {
-    query = 'DELETE
-             FROM 
-                fx_rates 
-             WHERE 
-                fx = ? 
-             AND 
-                date BETWEEN ? AND ?'
-    dbExecute(con, query, params = list(fx, from_date, to_date))
-  }
-  
-  # write new records
-  dt_fx = dt_fx[, date := format_ISO8601(date)]
-  dbAppendTable(con, "fx_rates", dt_fx)
-  
-  # select the symbols already in the data table
-  dbDisconnect(con)  
-}
-
-
-#' remove an FX from our DB tables
-#'
-#' @param fx 
-#'
-#' @return
-#' @export
-remove_fx_from_db = function(fx) {
-  # open the db connection
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  
-  # delete rate
-  query = 'DELETE
-             FROM 
-                fx_rates 
-             WHERE 
-                fx = ?'
-  dbExecute(con, query, params = list(fx))
-  
-  # select the symbols already in the data table
-  dbDisconnect(con)  
-}
-
-
 #############################################
 # stock profiles
 #############################################
@@ -220,17 +77,17 @@ safe_write_stock_profile = function(profile) {
   
   # select the symbols already in the data table
   db_symbols = tbl(con, "stock_profiles") %>% 
-                select(symbol) %>%
-                collect() %>% 
-                unlist() %>% 
-                unname()
+    select(symbol) %>%
+    collect() %>% 
+    unlist() %>% 
+    unname()
   
   # remove old record if the new one has the same symbol
   if (profile$symbol %in% db_symbols) {
     query = "DELETE FROM stock_profiles WHERE symbol = ?"
     dbExecute(con, query, params = profile$symbol)
   }
-
+  
   # write the record  
   df = as.data.frame(profile)
   dbAppendTable(con, "stock_profiles", df)
@@ -258,14 +115,14 @@ get_ohlc = function(sym, start = NULL, end = NULL) {
   
   # use some dplyr for the select query
   result = tbl(con, "stock_ohlc") %>%
-            filter(symbol %in% sym) %>%
-            as_tibble()
+    filter(symbol %in% sym) %>%
+    as_tibble()
   result = result %>%
-           mutate(date = ymd(date))
+    mutate(date = ymd(date))
   result
   if (!is.null(start)) {
     result = result %>% 
-              filter(date >= start)
+      filter(date >= start)
   }
   if (!is.null(end)) {
     result = result %>% 
@@ -374,49 +231,4 @@ get_latest_close = function() {
   
   return(result)
   
-}
-
-#############################################
-# transactions
-#############################################
-get_transactions = function() {
-  # open the db connection
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  
-  tr = dbReadTable(con, "transactions")
-  tr = tr %>% mutate(date = ymd(date)) %>% arrange(date)
-    
-  # close
-  dbDisconnect(con)  
-  
-  return(tr)
-}
-
-#' safely write a transaction data to the DB, if part of the transactions already exist
-#' it first deletes the old info, then adds the new data, in order to avoid duplicates
-#'
-#' @param tr data.table containing symbol, date, type, amount, money columns
-#'
-#' @return
-#' @export
-safe_write_transaction_data = function(tr) {
-  # open the db connection
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  
-  # get all pre-existing transactions in the DB
-  all_tr = get_transactions()
-  
-  # drop new entries that are already in the DB - use dplyr
-  safe_tr = anti_join(tr, 
-                      all_tr, 
-                      by = c("symbol", "date", "type", "amount", "money"))
-  
-  # write new records
-  safe_tr = safe_tr[, date := format_ISO8601(date)]
-  dbAppendTable(con, "transactions", safe_tr)
-  
-  # select the symbols already in the data table
-  dbDisconnect(con)  
 }

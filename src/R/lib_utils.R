@@ -2,6 +2,17 @@
 # NEW
 ##########################
 
+#' returns the location of the sqlite database as a file path string
+#'
+#' @return
+#' @export
+get_db_location = function() {
+  db_loc = file.path(dirname(here()), 
+                     "db",
+                     "data.db")
+  return(db_loc)
+}
+
 #' return a string timestamp in ISO8601 using the provided separators
 #'
 #' @param date_hour_sep separator to be used between date and hour segment of the output

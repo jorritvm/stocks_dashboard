@@ -1,11 +1,4 @@
-check_for_transaction_file_type = function(dt) {
-  return("saxo") 
-}
-
-# fpfn = file.choose()
-# dt = as.data.table(read.xlsx(fpfn))
-
-#' Title
+#' imports saxo transaction log into datbase
 #'
 #' @param dt 
 #'
