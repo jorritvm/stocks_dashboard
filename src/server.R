@@ -16,7 +16,8 @@ server = function(input, output, session) {
                       added_symbol = "",
                       removed_symbol = "",
                       updated_ohlc = FALSE,
-                      tr = get_transactions())
+                      tr = get_transactions(),
+                      updated_transactions = FALSE)
   
   ################################
   ### PAGE: LIST ALL FX
@@ -242,13 +243,29 @@ server = function(input, output, session) {
   
   ################################  
   ### PAGE: batch upload transactions
-  observe({ 
+  # handle file upload
+  observeEvent(input$batch_portfolio_file, { 
     req(input$batch_portfolio_file)
+
+    # read and detemrine upload file
     dt = as.data.table(read.xlsx(input$batch_portfolio_file$datapath))
-    file_source = "saxo"
-    # check if it is a saxo file
-    if (file_source == "saxo") import_saxo_transaction_log(dt)
-    
+    file_source = check_for_transaction_file_type(dt)
+
+    # parse upload file
+    if (file_source == "saxo") { 
+      import_saxo_transaction_log(dt)
+    }
+
+    rv$updated_transactions = rv$updated_transactions + 1
   })
+  
+  # update status text
+  output$update_transaction_text = renderText({
+    req(rv$updated_transactions)
+    "NEw transactions added to the DB."
+  })
+  
 }
+
+
 

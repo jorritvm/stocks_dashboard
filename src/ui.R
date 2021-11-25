@@ -218,9 +218,9 @@ body = dashboardBody(
                                    accept = c("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                                               ".xlsx")),
                          title = "Upload", status = "primary", solidHeader = TRUE, width = 12
-                       )  ,
+                       ),
                        box(
-                         "placeholder",
+                         textOutput("update_transaction_text"),
                          title = "Info", status = "info", solidHeader = TRUE, width = 12
                        )           
                        ),
