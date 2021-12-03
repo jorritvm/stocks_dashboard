@@ -43,7 +43,7 @@ init_database = function() {
 #'
 #' @return
 #' @export
-init_stock_profiles_table = function(con) {
+init_stock_profiles_table = function() {
 
   # s = as.data.table(
   #   list(
@@ -93,7 +93,7 @@ init_stock_profiles_table = function(con) {
 #'
 #' @return
 #' @export
-init_ohlc_table = function(con) {
+init_ohlc_table = function() {
   # s = as.data.table(
   #   list(
   #     date = character(0),
@@ -133,20 +133,8 @@ init_ohlc_table = function(con) {
 #'
 #' @return
 #' @export
-init_fxrate_table = function(con) {
-  # s = as.data.table(
-  #   list(
-  #     date = character(0),
-  #     Open = numeric(0),
-  #     High = numeric(0),
-  #     Low = numeric(0),
-  #     Close = numeric(0),
-  #     Volume = numeric(0),
-  #     Adjusted = numeric(0)
-  #   )
-  # )
-  # dbCreateTable(con, "stock_ohlc", s)
-  
+init_fxrate_table = function() {
+
   query = '
     CREATE TABLE fx_rates (
       fx	TEXT,
@@ -169,20 +157,8 @@ init_fxrate_table = function(con) {
 #'
 #' @return
 #' @export
-init_transactions_table = function(con) {
-  # s = as.data.table(
-  #   list(
-  #     date = character(0),
-  #     Open = numeric(0),
-  #     High = numeric(0),
-  #     Low = numeric(0),
-  #     Close = numeric(0),
-  #     Volume = numeric(0),
-  #     Adjusted = numeric(0)
-  #   )
-  # )
-  # dbCreateTable(con, "stock_ohlc", s)
-  
+init_transactions_table = function() {
+
   query = '
     CREATE TABLE transactions (
   symbol	TEXT,
@@ -200,12 +176,53 @@ init_transactions_table = function(con) {
 }
 
 
-# todo
-# CREATE TABLE "saxo_map" (
-#   "saxo"	TEXT,
-#   "yahoo"	TEXT,
-#   PRIMARY KEY("saxo","yahoo")
-# )
+#' will create the saxo map table
+#'
+#' @param con connection to db 
+#'
+#' @return
+#' @export
+init_saxomap_table = function() {
+
+  query = '
+    CREATE TABLE "saxo_map" (
+      "saxo"	TEXT,
+      "yahoo"	TEXT,
+      PRIMARY KEY("saxo","yahoo")
+    );
+  '
+  
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  dbExecute(con, query)
+  
+  dbDisconnect(con)
+}
+
+
+#' will create the bolero map table
+#'
+#' @param con connection to db 
+#'
+#' @return
+#' @export
+init_boleromap_table = function() {
+  
+  query = '
+    CREATE TABLE "bolero_map" (
+      "bolero"	TEXT,
+      "yahoo"	TEXT,
+      PRIMARY KEY("bolero","yahoo")
+    );
+  '
+  
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  dbExecute(con, query)
+  
+  dbDisconnect(con)
+}
+
 
 
 
@@ -224,5 +241,6 @@ library(readr)
 # init_ohlc_table()
 # init_fxrate_table()
 # init_transactions_table()
-
+# init_saxomap_table()
+# init_boleromap_table()
 

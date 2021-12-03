@@ -135,16 +135,7 @@ server = function(input, output, session) {
   # add to DB
     observeEvent(input$add_stock_symbol_btn, { 
     add_symbol = input$add_stock_symbol
-    
-    # get profile
-    profile = get_profile_info_from_api(add_symbol, input$add_stock_region, api_read_key())
-    safe_write_stock_profile(profile)
-   
-    # get OHLC
-    start_date = today() - 10000
-    end_date = today()- 0
-    ohlc = get_ohlc_from_api(add_symbol, start_date, end_date)
-    safe_write_ohlc_data(ohlc)
+    add_stock(add_symbol, input$add_stock_region)
     
     # update stocks profile
     rv$profiles = get_stock_profiles()
@@ -254,6 +245,9 @@ server = function(input, output, session) {
     # parse upload file
     if (file_source == "saxo") { 
       import_saxo_transaction_log(dt)
+    }
+    if (file_source == "bolero") { 
+      import_bolero_transaction_log(dt)
     }
 
     rv$updated_transactions = rv$updated_transactions + 1

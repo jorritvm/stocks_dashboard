@@ -56,5 +56,10 @@ safe_write_transaction_data = function(tr) {
 #' @return
 #' @export
 check_for_transaction_file_type = function(dt) {
-  return("saxo") 
+  if (names(dt)[1] == "Transactiedatum") {
+    file_type = "saxo"
+  } else if (names(dt)[1] == "Datum") {
+    file_type = "bolero"
+  }
+  return(file_type)
 }

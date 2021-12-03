@@ -69,6 +69,11 @@ safe_write_saxo_map = function(upload_saxo_yahoo_map) {
   # close the DB connection
   dbDisconnect(con)  
   
+  # make sure to also add the new stocks to the DB
+  for (i in 1:nrow(new_saxo_yahoo_items)) {
+    add_stock(new_bolero_yahoo_items[i, saxo])
+  }
+  
   # return the full set
   return(full_saxo_yahoo_map)
 }

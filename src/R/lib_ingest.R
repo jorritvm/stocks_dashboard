@@ -16,7 +16,9 @@ api_read_key = function() {
 #'
 #' @return profile as a list, empty list if symbol is not found
 #' @export
-get_profile_info_from_api = function(symbol, region, rapidapi_yahoo_key) {
+get_profile_info_from_api = function(symbol, 
+                                     region = NULL, 
+                                     rapidapi_yahoo_key = api_read_key()) {
   json_response = api_get_profile_as_json(symbol, region, rapidapi_yahoo_key) 
   profile = extract_usefull_company_profile_from_json(json_response)
   return(profile)

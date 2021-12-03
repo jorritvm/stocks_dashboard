@@ -62,6 +62,26 @@ get_stock_key_info = function(profiles) {
 }
 
 
+#' add a stock to the DB by adding profile & ohlc data
+#'
+#' @param add_symbol yahoo symbol
+#' @param region region US or EU, default NULL
+#'
+#' @return
+#' @export
+add_stock = function(add_symbol, region = NULL) {
+  # get profile
+  profile = get_profile_info_from_api(add_symbol, region, api_read_key())
+  safe_write_stock_profile(profile)
+  
+  # get OHLC
+  start_date = today() - 10000
+  end_date = today()- 0
+  ohlc = get_ohlc_from_api(add_symbol, start_date, end_date)
+  safe_write_ohlc_data(ohlc) 
+}
+
+
 #' safely write a new stock profile to the DB, if a record with the same symbol
 #' already exists it first deletes the old info, then adds the new data, in
 #' order to avoid duplicates
