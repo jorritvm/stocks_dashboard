@@ -33,6 +33,7 @@ import_saxo_transaction_log = function(dt) {
   dt[tolower(type) %like% 'ividend', type := "div"]  
   dt[amount == "-", amount := ""]
   dt[, amount := as.numeric(amount)]
+  dt[, account = "saxo"]
   
   safe_write_transaction_data(dt)
 }

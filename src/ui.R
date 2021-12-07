@@ -193,6 +193,12 @@ body = dashboardBody(
     tabItem(tabName = "portfolio",
             navbarPage(
               title = "",
+              tabPanel("Position",
+                       box(plotOutput("position_per_broker"),
+                           title = "Position per account", status = "info", solidHeader = TRUE, width = 12),
+                       box(plotOutput("position_per_stock"),
+                           title = "Position per stock", status = "info", solidHeader = TRUE, width = 12)
+              ),
               tabPanel("Transactions",
                        DTOutput("transactions_table")
                        ),
@@ -223,11 +229,7 @@ body = dashboardBody(
                          textOutput("update_transaction_text"),
                          title = "Info", status = "info", solidHeader = TRUE, width = 12
                        )           
-                       ),
-              
-              tabPanel("Remove",
-                         "placeholder"
-                      )
+                       )
             )
     )
   )

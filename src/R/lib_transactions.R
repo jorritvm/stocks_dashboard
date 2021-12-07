@@ -12,7 +12,12 @@ get_transactions = function() {
   con <- dbConnect(RSQLite::SQLite(), db_fpfn)
   
   tr = dbReadTable(con, "transactions")
-  tr = tr %>% mutate(date = ymd(date)) %>% arrange(date)
+  tr = tr %>%
+        mutate(date = ymd(date)) %>%
+        mutate(amount = abs(amount)) %>%    
+        arrange(date) %>% 
+        as.data.table()
+  tr[type == "div", amount := NA]
   
   # close
   dbDisconnect(con)  
@@ -62,4 +67,35 @@ check_for_transaction_file_type = function(dt) {
     file_type = "bolero"
   }
   return(file_type)
+}
+
+get_current_position_per_stock_and_broker = function(tr) {
+  trp = copy(tr)
+  
+  # correct signs
+  trp = trp[type == "sell", amount := amount * -1]
+  trp = trp[type == "transfer_out", amount := amount * -1]
+  
+  # aggregate transactions to current position
+  trp = trp[type != "div", 
+            .(amount = sum(amount)), 
+            by = .(symbol, account)][amount != 0]
+  
+  # add latest evaluation
+  trp = trp %>% 
+    left_join(get_latest_close(), by = "symbol")
+  trp[, latest_value := amount * price_adj]
+  trp[, latest_close := NULL]
+  
+  return(trp)
+}
+
+get_current_position_per_stock = function(trp) {
+  result = trp[, .(portfolio = sum(latest_value)), by = .(symbol)]
+  return(result)
+}
+
+get_current_position_per_broker = function(trp) {
+  result = trp[, .(portfolio = sum(latest_value)), by = .(account)]
+  return(result)
 }

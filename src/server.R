@@ -228,6 +228,10 @@ server = function(input, output, session) {
   })
   
   ################################  
+  ### PAGE: portfolio positions
+  # output$position_per_broker = TODO
+  
+  ################################  
   ### PAGE: list all transactions
   output$transactions_table = renderDT(rv$tr)
   

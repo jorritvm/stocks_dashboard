@@ -165,7 +165,8 @@ init_transactions_table = function() {
   date	TEXT,
   type	TEXT,
   amount	REAL,
-  money REAL
+  money REAL,
+  account TEXT
 );'
   
   db_fpfn = get_db_location()
