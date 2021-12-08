@@ -118,3 +118,143 @@ plot_fx = function(fx, window) {
 
   return(fig)
 }
+
+
+plot_position_per_broker = function(trpb) {
+  trpb = trpb[order(account)]
+  fig = plot_ly(x = round(trpb$portfolio,0), 
+                y = trpb$account, 
+                type = 'bar', 
+                orientation = 'h') %>% 
+        layout(yaxis = list(autorange="reversed"))
+  
+  
+  return(fig)
+}
+
+
+plot_position_per_stock = function(trps) {
+  trps = trps[order(symbol)]
+  fig = plot_ly(x = round(trps$portfolio,0), 
+                y = trps$symbol, 
+                type = 'bar', 
+                orientation = 'h') %>% 
+        layout(yaxis = list(autorange="reversed"))
+  
+  return(fig)
+}
+
+calculate_market_timing = function(timing_symbol, timing_window, tr) {
+  w = window_to_start_end_dates(timing_window)
+  
+  # prepare & filter tr
+  trs = copy(tr)
+  trs = trs[type == "sell", amount := amount * -1]
+  trs = trs[type == "transfer_out", amount := amount * -1]
+  trs = trs[type != "div" & symbol == timing_symbol]
+  
+  # get one amount per day
+  trs = trs[,
+            .(amount = sum(amount)),
+            by = date][amount != 0]
+  
+  # get the position from the transactions
+  trs[, position := cumsum(amount)]
+  trs[, amount := NULL]
+  
+  # filter window
+  trs = rbind(trs, 
+              data.table(date = c(w$start, w$end), position = c(NA,NA)))
+  trs = trs[order(date)]
+  trs[, position := na.locf.0b(position)]
+  trsub = trs[date >= w$start & date <= w$end]
+  
+  # pad and add close value
+  trsub = pad(trsub, interval = "day")
+  trsub[, position := na.locf.0b(position)]
+  ohlc = as.data.table(get_ohlc(timing_symbol, w$start, w$end))
+  trsub = merge(trsub,
+                ohlc[, .(date, close)],
+                by = "date",
+                all.x = TRUE)
+  
+  # missing weekend ohlc -> LOCF and also fix leading NA
+  trsub[, close := na.locf.cb(close)]
+
+  #valuate
+  trsub[, value := close * position]
+  trsub[, holding := (position != 0) * close]
+
+  return(trsub)
+}
+ 
+plot_market_timing_p = function(trsub) {
+  start = min(trsub$date)
+  end = max(trsub$date)
+  # plot 
+  p = 
+    ggplot(data = trsub,
+           aes(x = date)) + 
+      geom_area(aes(y = holding,  fill = as.factor(position))) +
+      geom_line(aes(y = close)) +
+      scale_fill_brewer(palette="Greens") + 
+      scale_x_date(
+                 limits = c(start, end),
+                 expand = c(0,0)) +
+      labs(y = "Stock value") + 
+      theme(legend.position = "none")
+           
+  return(p)
+}
+
+plot_market_timing_q = function(trsub) {
+  start = min(trsub$date)
+  end = max(trsub$date)
+  # plot 
+  p = 
+    ggplot(data = trsub,
+           aes(x = date)) + 
+    geom_line(aes(y = position)) +
+    scale_x_date(
+      limits = c(start, end),
+      expand = c(0,0)) +
+    labs(y = "Position # holding") + 
+    theme(legend.position = "none")
+  
+  return(p)
+}
+
+plot_market_timing_v = function(trsub) {
+  start = min(trsub$date)
+  end = max(trsub$date)
+  # plot 
+  p = 
+    ggplot(data = trsub,
+           aes(x = date)) + 
+    geom_line(aes(y = value)) +
+    scale_x_date(
+      limits = c(start, end),
+      expand = c(0,0)) +
+    labs(y = "Position # holding") + 
+    theme(legend.position = "none")
+  
+  return(p)
+}
+
+na.locf.cb = function(x) {
+  y = na.locf(x, na.rm = FALSE)
+  z = na.locf(y, fromLast = TRUE)
+  return(z)
+}
+
+na.locf.0b = function(x) {
+  y = na.locf(x, na.rm = FALSE)
+  y[is.na(y)] = 0
+  return(y)
+}
+
+standardize = function(x) {
+  return((x-min(x))/(max(x)-min(x)))
+}
+
+

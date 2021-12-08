@@ -17,7 +17,8 @@ server = function(input, output, session) {
                       removed_symbol = "",
                       updated_ohlc = FALSE,
                       tr = get_transactions(),
-                      updated_transactions = FALSE)
+                      updated_transactions = FALSE
+                      )
   
   ################################
   ### PAGE: LIST ALL FX
@@ -229,7 +230,39 @@ server = function(input, output, session) {
   
   ################################  
   ### PAGE: portfolio positions
-  # output$position_per_broker = TODO
+  output$position_per_broker = renderPlotly({
+                                trp = get_current_position_per_stock_and_broker(rv$tr)
+                                trpb = get_current_position_per_broker(trp)
+                                plot_position_per_broker(trpb)                              
+                               })
+  
+  output$position_per_stock = renderPlotly({
+    trp = get_current_position_per_stock_and_broker(rv$tr)
+    trps = get_current_position_per_stock(trp)
+    plot_position_per_stock(trps)                              
+  })
+  
+  ################################  
+  ### PAGE: performance
+  output$total_performance = NULL
+  
+  ################################  
+  ### PAGE: market timing
+  observe({ updateSelectInput(session, 
+                              "timing_symbol", 
+                              label = NULL, 
+                              choices = rv$profiles$symbol) 
+          })
+    
+  trsub = reactive({
+            calculate_market_timing(input$timing_symbol, 
+                                    input$timing_window,
+                                    rv$tr)
+                  })
+  
+  output$market_timing_p = renderPlot(plot_market_timing_p(trsub()))
+  output$market_timing_q = renderPlot(plot_market_timing_q(trsub()))
+  output$market_timing_v = renderPlot(plot_market_timing_v(trsub()))
   
   ################################  
   ### PAGE: list all transactions

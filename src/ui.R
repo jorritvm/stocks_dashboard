@@ -194,10 +194,47 @@ body = dashboardBody(
             navbarPage(
               title = "",
               tabPanel("Position",
-                       box(plotOutput("position_per_broker"),
-                           title = "Position per account", status = "info", solidHeader = TRUE, width = 12),
-                       box(plotOutput("position_per_stock"),
-                           title = "Position per stock", status = "info", solidHeader = TRUE, width = 12)
+                       box(
+                         plotlyOutput("position_per_broker"),
+                         title = "Position per account", status = "info", solidHeader = TRUE, width = 12
+                         ),
+                       box(
+                         plotlyOutput("position_per_stock"),
+                         title = "Position per stock", status = "info", solidHeader = TRUE, width = 12
+                         )
+              ),
+              tabPanel("Performance",
+                       box(
+                         plotlyOutput("total_performance"),
+                         title = "Total performance", status = "info", solidHeader = TRUE, width = 12
+                         )
+              ),
+              tabPanel("Timing",
+                       box(
+                         selectInput("timing_symbol", "Stock", ""),
+                         radioButtons("timing_window",
+                                      "",
+                                      choices = list("All"= "all",
+                                                     "5Y" = "5Y",
+                                                     "3Y" = "3Y",
+                                                     "2Y" = "2Y",
+                                                     "1Y" = "1Y",
+                                                     "YTD" = "YTD",
+                                                     "6M" = "6M",
+                                                     "3M" = "3M",
+                                                     "1M" = "1M",
+                                                     "2W" = "2W",
+                                                     "1W" = "1W"),
+                                      selected = "YTD",
+                                      inline = TRUE),
+                         title = "Input", status = "primary", solidHeader = TRUE, width = 12
+                        ),
+                       box(
+                         plotOutput("market_timing_p"),
+                         plotOutput("market_timing_q"),
+                         plotOutput("market_timing_v"),
+                         title = "Market timing", status = "info", solidHeader = TRUE, width = 12
+                          )
               ),
               tabPanel("Transactions",
                        DTOutput("transactions_table")
