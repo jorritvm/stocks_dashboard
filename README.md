@@ -32,4 +32,4 @@ The tool can benchmark one stocks performance to another over various timeframes
 
 The tool can show your market timing visually.
 
-<img src="image/timing.png" width="750"> 
+<img src="image/timings.png" width="750"> 
