@@ -61,7 +61,7 @@ import_bolero_transaction_log = function(dt) {
   dt_p[tolower(type) %like% 'aankoop', type := "buy"]
   dt_p[tolower(type) %like% 'ividend', type := "div"]
   dt_p[, amount := as.numeric(amount)]
-  dt_p[, account = "bolero"]
+  dt_p[, account := "bolero"]
   
   safe_write_transaction_data(dt_p)
 }
