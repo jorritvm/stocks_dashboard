@@ -25,6 +25,7 @@ get_transactions = function() {
   return(tr)
 }
 
+
 #' safely write a transaction data to the DB, if part of the transactions already exist
 #' it first deletes the old info, then adds the new data, in order to avoid duplicates
 #'
@@ -69,6 +70,7 @@ check_for_transaction_file_type = function(dt) {
   return(file_type)
 }
 
+
 get_current_position_per_stock_and_broker = function(tr) {
   trp = copy(tr)
   
@@ -90,10 +92,12 @@ get_current_position_per_stock_and_broker = function(tr) {
   return(trp)
 }
 
+
 get_current_position_per_stock = function(trp) {
   result = trp[, .(portfolio = sum(latest_value)), by = .(symbol)]
   return(result)
 }
+
 
 get_current_position_per_broker = function(trp) {
   result = trp[, .(portfolio = sum(latest_value)), by = .(account)]

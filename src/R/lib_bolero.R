@@ -9,6 +9,8 @@ import_bolero_transaction_log = function(dt) {
   dt[, Event := ""]
   dt[Details %like% "Aankoop", Event := "Aankoop"]
   dt[Details %like% "Verkoop", Event := "Verkoop"]
+  dt[Details %like% "Provisionering", Event := "cash_in"]
+  
   dt[, bolero_description := str_trim(gsub("Aankoop|Verkoop|Online", "", Details))]
   
   # fix symbol
@@ -17,9 +19,9 @@ import_bolero_transaction_log = function(dt) {
   full_bolero_yahoo_map = safe_write_bolero_map(upload_bolero_yahoo_map)
   dt = dt %>% left_join(full_bolero_yahoo_map, by = c("bolero_description" = "bolero"))
   
-  # filter rows
+  # subset rows for stock operations
   keep_these_types = c("Verkoop","Aankoop","Cashdividend","Herbeleggingsdividend")
-  dt = dt[Event %in% keep_these_types & Transactie %like% "effecten"]
+  dt1 = dt[Event %in% keep_these_types & Transactie %like% "effecten"]
   
   # bolero does not provide 'amount' so we have to guess it from the ohlc data!
   # if you made a transaction today, value date is in the future, so you wont have OHLC data, 
@@ -32,15 +34,19 @@ import_bolero_transaction_log = function(dt) {
             select(symbol, date, price)
   dbDisconnect(con)
   df_ohlc = df_ohlc %>% 
-            full_join(dt[, .(date = str_date, symbol = yahoo)], by = c("symbol","date")) %>%
+            full_join(dt1[, .(date = str_date, symbol = yahoo)], by = c("symbol","date")) %>%
             arrange(symbol, date) %>%
             fill(price) %>%
             mutate(date = ymd(date))
   
-  dt_p = dt %>% 
+  dt_p = dt1 %>% 
     left_join(df_ohlc, by = c("yahoo" = "symbol", "date")) %>%
     mutate(Aantal = round(abs(Waarde) / price))
   dt_p 
+  
+  # subset rows for  cash operations
+  dt2 = dt[Event %in% c("cash_in", "cash_out")]
+  dt = rbind(dt1, dt2)
   
   # filter columns & set proper names
   dt_p = dt_p[, .(symbol = yahoo,
@@ -48,6 +54,9 @@ import_bolero_transaction_log = function(dt) {
                   type = Event,
                   amount = Aantal,
                   money = Waarde)]
+  # add cash transactions again
+  dt_p = rbind(dt_p,
+               dt2[, .(symbol, date, type = Event, amount = NA, money = Waarde)])
   dt_p[tolower(type) %like% 'verkoop', type := "sell"]
   dt_p[tolower(type) %like% 'aankoop', type := "buy"]
   dt_p[tolower(type) %like% 'ividend', type := "div"]
@@ -80,19 +89,21 @@ safe_write_bolero_map = function(upload_bolero_yahoo_map) {
               bolero_yahoo_map_db, 
               by = c("bolero", "yahoo"))
   
-  # upload new entries to the db
-  dbAppendTable(con, "bolero_map", new_bolero_yahoo_items)
+  if (nrow(new_bolero_yahoo_items) > 0) {
+    # upload new entries to the db
+    dbAppendTable(con, "bolero_map", new_bolero_yahoo_items)
+    
+    # make sure to also add the new stocks to the DB
+    for (i in 1:nrow(new_bolero_yahoo_items)) {
+      add_stock(new_bolero_yahoo_items[i, yahoo])
+    }
+  }
   
   # now that we have full collection in the DB we extract it again
   full_bolero_yahoo_map =  dbReadTable(con, "bolero_map")
   
   # close the DB connection
   dbDisconnect(con)  
-  
-  # make sure to also add the new stocks to the DB
-  for (i in 1:nrow(new_bolero_yahoo_items)) {
-    add_stock(new_bolero_yahoo_items[i, yahoo])
-  }
   
   # return the full set
   return(full_bolero_yahoo_map)
