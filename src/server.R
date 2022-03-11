@@ -1,4 +1,5 @@
 source("load_libraries.R")
+
 options(shiny.maxRequestSize = 30*1024^2) # 30 MB 
 reactlog_enable()
 
@@ -11,13 +12,13 @@ server = function(input, output, session) {
   rv = reactiveValues(fx = get_latest_fx(),
                       added_fx = "",
                       removed_fx = "",
-                      updated_fx = FALSE,
+                      updated_fx = 0,
                       profiles = get_stock_profiles(),
                       added_symbol = "",
                       removed_symbol = "",
-                      updated_ohlc = FALSE,
+                      updated_ohlc = 0,
                       tr = get_transactions(),
-                      updated_transactions = FALSE
+                      updated_transactions = 0
                       )
   
   ################################
@@ -26,7 +27,7 @@ server = function(input, output, session) {
   output$fx_list = renderDT(rv$fx)
 
   # ################################
-  # ### PAGE: PLOT AN 
+  # ### PAGE: PLOT AN FX
   # # update input list 
   # observe({ updateSelectInput(session, 
   #                             "profile_stock_symbol", 
@@ -36,10 +37,11 @@ server = function(input, output, session) {
   # 
   # # update table
   # output$profile_stock_table = renderTable({get_stock_profile_table(input$profile_stock_symbol)})
+  
   # update input list 
-  observe({ updateSelectInput(session, 
-                              "fx_symbol", 
-                              label = NULL, 
+  observe({ updateSelectInput(session,
+                              "fx_symbol",
+                              label = NULL,
                               choices = rv$fx$fx)
   })
   # update plot
@@ -239,7 +241,8 @@ server = function(input, output, session) {
   output$position_per_stock = renderPlotly({
     trp = get_current_position_per_stock_and_broker(rv$tr)
     trps = get_current_position_per_stock(trp)
-    plot_position_per_stock(trps)                              
+    trpsc = trps %>% left_join(rv$profiles[, c("symbol","company_name")], by = "symbol")
+    plot_position_per_stock(trpsc)                              
   })
   
   ################################  

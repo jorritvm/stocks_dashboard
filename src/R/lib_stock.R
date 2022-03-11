@@ -1,7 +1,3 @@
-#############################################
-# stock profiles
-#############################################
-
 #' read the stock profiles table in its entirety
 #'
 #' @return tibble

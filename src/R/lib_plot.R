@@ -136,7 +136,7 @@ plot_position_per_broker = function(trpb) {
 plot_position_per_stock = function(trps) {
   trps = trps[order(symbol)]
   fig = plot_ly(x = round(trps$portfolio,0), 
-                y = trps$symbol, 
+                y = trps$company_name, # trps$symbol, 
                 type = 'bar', 
                 orientation = 'h') %>% 
         layout(yaxis = list(autorange="reversed"))

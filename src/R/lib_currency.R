@@ -1,7 +1,3 @@
-#######################
-# FX
-#######################
-
 #' returns FX data for the requested symbol(s)
 #'
 #' @param sym single symbol string or vector of multiple symbols
