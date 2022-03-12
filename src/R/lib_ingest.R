@@ -145,12 +145,15 @@ update_all_ohlc = function() {
   for (i in 1:nrow(latest_close)) {
     
     symbol = unlist(latest_close[i, "symbol"])
-    start_date = ymd(latest_close[i, "latest_close"])
+    start_date = latest_close[i, latest_close]
     end_date = today()
     
     if ((end_date - start_date) > 1) {
       new_ohlc_data = get_ohlc_from_api(symbol, start_date + days(1), end_date)     
       new_ohlc_data = new_ohlc_data %>% mutate(date = format_ISO8601(date))
+      
+      # sometimes the API fucks up and gives us duplicate symbol-date entries -> fix that here:
+      new_ohlc_data = new_ohlc_data[, .SD[1], by = .(symbol, date)]
       
       # write the record  
       dbAppendTable(con, "stock_ohlc", new_ohlc_data)
