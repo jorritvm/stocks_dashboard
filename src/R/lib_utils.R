@@ -78,6 +78,16 @@ numeric_date_to_iso8601 = function(num) {
 # from JRUTILS 0.5.0
 ##########################
 
+tstamp = function (date_hour_sep = "-", date_sep = "", hour_sep = "") 
+{
+  date_pattern = paste(c("%Y", "%m", "%d"), 
+                       collapse = date_sep)
+  hour_pattern = paste(c("%H", "%M", "%S"), 
+                       collapse = hour_sep)
+  full_pattern = paste(c(date_pattern, hour_pattern), collapse = date_hour_sep)
+  return(strftime(Sys.time(), full_pattern))
+}
+
 #' create a list where for each element the name of the variable is the key and the content is the variable content
 #'
 #' @param ... comma seperated list of variables

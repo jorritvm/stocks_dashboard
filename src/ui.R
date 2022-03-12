@@ -113,7 +113,7 @@ body = dashboardBody(tabItems(
         ),
         box(
           textOutput("update_fx_text"),
-          title = "Action",
+          title = "Result",
           status = "info",
           solidHeader = TRUE,
           width = 6

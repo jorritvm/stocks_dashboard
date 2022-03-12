@@ -9,18 +9,19 @@ server = function(input, output, session) {
     debug01()
   })
   
+  
   ### DEFINE REACTIVE DATASETS
   rv = reactiveValues(
     fx = get_latest_fx(),
     added_fx = "",
     removed_fx = "",
-    updated_fx = 0,
+    updated_fx = FALSE,
     profiles = get_stock_profiles(),
     added_symbol = "",
     removed_symbol = "",
-    updated_ohlc = 0,
+    updated_ohlc = FALSE,
     tr = get_transactions(),
-    updated_transactions = 0
+    updated_transactions = FALSE
   )
   
   ################################
@@ -93,20 +94,35 @@ server = function(input, output, session) {
   # update status text
   output$remove_fx_output = renderText({
     req(rv$removed_fx)
-    paste("FX", rv$removed_fx, "deleted from the DB.")
+    paste(tstamp(" ","-",":"), "FX", rv$removed_fx, "deleted from the DB.")
   })
   
   ################################
   ### PAGE: update FX
+  # update status text
+  # start_fx_text <- eventReactive(input$update_fx_btn, {
+  #   "hallo" #paste(tstamp(" ","-",":"), "Started updating all FX")
+  #   print("eventreactive!!!!!!")
+  # })
+  # 
   # update db
   observeEvent(input$update_fx_btn, {
+    notif = paste(tstamp(" ","-",":"), "Updating all FX") # this does not work
+    id <- showNotification(notif, duration = NULL, closeButton = FALSE, type = "message")
+    on.exit(removeNotification(id), add = TRUE)
+    
     update_all_fx()
-    rv$updated_fx = rv$updated_fx + 1
+    rv$updated_fx = paste(tstamp(" ","-",":"), "FX data updated for all currencies in the DB.")
   })
-  # update status text
+  
+
+  # output$update_fx_text = renderText({
+  #   start_fx_text()
+  # })
+  
   output$update_fx_text = renderText({
     req(rv$updated_fx)
-    "FX data updated for all stocks in the DB."
+    rv$updated_fx
   })
   
   
@@ -186,13 +202,17 @@ server = function(input, output, session) {
   ### PAGE: update OHLC
   # update db
   observeEvent(input$update_ohlc_btn, {
+    notif = paste(tstamp(" ","-",":"), "Updating all OHLC data")
+    id <- showNotification(notif, duration = NULL, closeButton = FALSE, type = "message")
+    on.exit(removeNotification(id), add = TRUE)
+    
     update_all_ohlc()
-    rv$updated_ohlc = rv$updated_ohlc + 1
+    rv$updated_ohlc =  paste(tstamp(" ","-",":"), "OHLC data updated for all stocks in the DB.")
   })
   # update status text
   output$update_ohlc_text = renderText({
     req(rv$updated_ohlc)
-    "OHLC data updated for all stocks in the DB."
+    rv$updated_ohlc
   })
   
   ################################
@@ -304,7 +324,12 @@ server = function(input, output, session) {
   # update status text
   output$update_transaction_text = renderText({
     req(rv$updated_transactions)
-    "NEw transactions added to the DB."
+    "New transactions added to the DB."
+  })
+  
+  # update transactions reactive values dataset
+  eventReactive(rv$updated_transactions, {
+    rv$updated_transactions = get_transactions()
   })
   
 }
