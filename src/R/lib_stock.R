@@ -1,6 +1,19 @@
 #' read the stock profiles table in its entirety
 #'
-#' @return tibble
+#' @return a data.table where each line documents a stock with structure:
+#'         - symbol: character
+#'         - currency: character
+#'         - exchange_symbol: character
+#'         - exchange_name: character
+#'         - company_name: character
+#'         - business_summary: character
+#'         - industry: character
+#'         - address1: character
+#'         - zip: character
+#'         - city: character
+#'         - country: character
+#'         - website: character
+#'         - key: character
 #' @export
 get_stock_profiles = function() {
   # open the db connection
@@ -10,7 +23,8 @@ get_stock_profiles = function() {
   # query
   result = tbl(con, "stock_profiles") %>%
     arrange(symbol) %>%
-    as_tibble()
+    mutate(key = paste(symbol, company_name, sep = " | ")) %>%
+    as.data.table()
   
   # close
   dbDisconnect(con)  
@@ -21,16 +35,18 @@ get_stock_profiles = function() {
 
 #' returns a key-value (2 column) table with profile information on a stock
 #'
-#' @param sym string stock symbol
+#' @param keyvalue string: "symbol | company"
 #'
-#' @return
+#' @return a data.table with structure:
+#'         - parameter: character
+#'         - value: character
 #' @export
-get_stock_profile_table = function(sym) {
+get_stock_profile_table = function(keyvalue) {
   p_all = get_stock_profiles()
   p_one = p_all %>% 
-    filter(symbol == sym)
-  p_one_transpose = as_tibble(cbind(nms = names(p_one), t(p_one)))
-  names(p_one_transpose) = c("parameter", "value")
+    filter(key == keyvalue)
+  p_one_transpose = cbind(nms = names(p_one), t(p_one)) %>% as.data.table()
+  setnames(p_one_transpose, c("parameter", "value"))
   return(p_one_transpose)
 }
 
@@ -39,7 +55,13 @@ get_stock_profile_table = function(sym) {
 #'
 #' @param profiles 
 #'
-#' @return
+#' @return a data.table with structure:
+#'         - exchange: character
+#'         - symbol: character
+#'         - company: character
+#'         - currency: character
+#'         - price_adj: numeric
+#'         - latest_close: Date
 #' @export 
 get_stock_key_info = function(profiles) {
   # filter some columns
@@ -51,10 +73,10 @@ get_stock_key_info = function(profiles) {
   close_data = get_latest_close()
   
   # join
-  result = result %>% inner_join(close_data, by = "symbol")
+  result = result %>% 
+    inner_join(close_data, by = "symbol")
   
   return(result)
-  
 }
 
 
@@ -112,19 +134,23 @@ safe_write_stock_profile = function(profile) {
   dbDisconnect(con)  
 }
 
-#############################################
-# stock OHLC
-#############################################
-
-#' returns OHLC data for the requested symbol(s)
+#' returns OHLC data for the requested symbol(s) from the DB
 #'
 #' @param sym single symbol string or vector of multiple symbols
-#' @param start date
-#' @param end date
+#' @param start_date 
+#' @param end_date 
 #'
-#' @return tibble
+#' @return a data.table containing OHLC data for one or multiple symbols with structure:
+#'         - symbol: character
+#'         - date: Date
+#'         - open: numeric
+#'         - high: numeric
+#'         - low: numeric
+#'         - close: numeric
+#'         - volume: numeric
+#'         - adjusted: numeric
 #' @export
-get_ohlc = function(sym, start = NULL, end = NULL) {
+get_ohlc = function(sym, start_date = NULL, end_date = NULL) {
   # open the db connection
   db_fpfn = get_db_location()
   con <- dbConnect(RSQLite::SQLite(), db_fpfn)
@@ -132,17 +158,17 @@ get_ohlc = function(sym, start = NULL, end = NULL) {
   # use some dplyr for the select query
   result = tbl(con, "stock_ohlc") %>%
     filter(symbol %in% sym) %>%
-    as_tibble()
+    as.data.table()
   result = result %>%
     mutate(date = ymd(date))
-  result
-  if (!is.null(start)) {
+
+  if (!is.null(start_date)) {
     result = result %>% 
-      filter(date >= start)
+      filter(date >= start_date)
   }
-  if (!is.null(end)) {
+  if (!is.null(end_date)) {
     result = result %>% 
-      filter(date <= end)
+      filter(date <= end_date)
   } 
   
   # close
@@ -151,8 +177,10 @@ get_ohlc = function(sym, start = NULL, end = NULL) {
   return(result)
 }
 
-#' safely write a stock OHLC data to the DB, if part of the OHLC already exists
-#' it first deletes the old info, then adds the new data, in order to avoid duplicates
+#' safely write a stock OHLC data to the DB
+#' 
+#' if part of the OHLC already exists this first deletes the old info, 
+#' then adds the new data, in order to avoid duplicates
 #'
 #' @param ohlc data.table
 #'
@@ -196,16 +224,18 @@ safe_write_ohlc_data = function(ohlc) {
 }
 
 
-#' remove a stock from our DB tables
+#' remove a stock from our DB tables (OHLC & profiles)
 #'
-#' @param symbol 
+#' @param key_to_remove string "symbol | company"
 #'
 #' @return
 #' @export
-remove_stock_from_db = function(symbol) {
+remove_stock_from_db = function(key_to_remove) {
   # open the db connection
   db_fpfn = get_db_location()
   con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  
+  symbol = key_to_symbol(key)
   
   # delete OHLC
   query = 'DELETE
@@ -230,7 +260,10 @@ remove_stock_from_db = function(symbol) {
 
 #' returns a small table with for each stock the latest close date & value
 #'
-#' @return
+#' @return a data.table with structure:
+#'         - symbol: character
+#'         - price_adj: numeric
+#'         - latest_close: Date
 #' @export
 get_latest_close = function() {
   # open the db connection
@@ -240,7 +273,8 @@ get_latest_close = function() {
   result = dbGetQuery(con, 
                       'SELECT symbol, round(adjusted, 2) as price_adj, max(date) as latest_close
                       FROM stock_ohlc 
-                      GROUP BY symbol') %>% as_tibble()
+                      GROUP BY symbol') %>% as.data.table()
+  result[, latest_close := ymd(latest_close)][]
   
   # close
   dbDisconnect(con)  

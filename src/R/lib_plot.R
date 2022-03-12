@@ -25,13 +25,16 @@ window_to_start_end_dates = function(window) {
 
 #' create a candlestick plot for a stock
 #'
-#' @param sym stock to plot
+#' @param key key string "symbol | company
 #' @param window time window to plot
 #'
 #' @return
 #' @export
-plot_candlestick = function(sym,
+plot_candlestick = function(key,
                             window) {
+  
+  # get symbol
+  sym = key_to_symbol(key)
   
   # translate window to start & end days
   w = window_to_start_end_dates(window)
@@ -53,15 +56,19 @@ plot_candlestick = function(sym,
 
 #' create a plot that shows a stock versus a benchmark
 #'
-#' @param sym stock to plot
-#' @param bench stock to use as baseline
+#' @param key key string "symbol | company" for stock to plot in thick black
+#' @param bench key string "symbol | company" for stock to use as baseline
 #' @param window time window to plot
 #'
 #' @return
 #' @export
-plot_benchmark = function(sym,
+plot_benchmark = function(key,
                           bench,
                           window) {
+  
+  # get symbols
+  sym = key_to_symbol(key)
+  bench = key_to_symbol(bench)
   
   # translate window to start & end days
   w = window_to_start_end_dates(window)
@@ -120,6 +127,12 @@ plot_fx = function(fx, window) {
 }
 
 
+#' creates a plot for actual portfolio position per broker
+#'
+#' @param trpb 
+#'
+#' @return
+#' @export
 plot_position_per_broker = function(trpb) {
   trpb = trpb[order(account)]
   fig = plot_ly(x = round(trpb$portfolio,0), 
@@ -133,10 +146,16 @@ plot_position_per_broker = function(trpb) {
 }
 
 
+#' creates a plot for actual portfolio position per stock (irrespective of broker)
+#'
+#' @param trps 
+#'
+#' @return
+#' @export
 plot_position_per_stock = function(trps) {
   trps = trps[order(symbol)]
   fig = plot_ly(x = round(trps$portfolio,0), 
-                y = trps$company_name, # trps$symbol, 
+                y = trps$key, 
                 type = 'bar', 
                 orientation = 'h') %>% 
         layout(yaxis = list(autorange="reversed"))
@@ -144,7 +163,21 @@ plot_position_per_stock = function(trps) {
   return(fig)
 }
 
-calculate_market_timing = function(timing_symbol, timing_window, tr) {
+#' calculate data linked to market timing for a certain stock
+#'
+#' @param timing_key key for stock "symbol | company"
+#' @param timing_window window for plot
+#' @param tr transactions table
+#'
+#' @return a data.table with structure:
+#'         - date: Date
+#'         - position: numeric
+#'         - close: numeric
+#'         - value: numeric
+#'         - holding: numeric
+#' @export
+calculate_market_timing = function(timing_key, timing_window, tr) {
+  timing_symbol = key_to_symbol(timing_key)
   w = window_to_start_end_dates(timing_window)
   
   # prepare & filter tr

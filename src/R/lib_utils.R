@@ -2,6 +2,17 @@
 # NEW
 ##########################
 
+#' cuts the symbol from a key string "symbol | company"
+#'
+#' @param key string "symbol | company"
+#'
+#' @return string symbol
+#' @export
+key_to_symbol = function(key) {
+  symbol = str_split_fixed(key, "\\ \\|\\ ", 2)[1]
+  return(symbol)
+}
+
 #' returns the location of the sqlite database as a file path string
 #'
 #' @return

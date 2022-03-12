@@ -133,7 +133,7 @@ body = dashboardBody(tabItems(
       tabPanel(
         "Profile",
         box(
-          selectInput("profile_stock_symbol", "View stock profile", ""),
+          selectInput("profile_stock_key", "View stock profile", ""),
           title = "Input",
           status = "primary",
           solidHeader = TRUE,
@@ -151,7 +151,7 @@ body = dashboardBody(tabItems(
       tabPanel(
         "Add",
         box(
-          textInput("add_stock_symbol", "Add a stock to this site", ""),
+          textInput("add_stock_symbol", "Enter Yahoo symbol to add a stock", ""),
           selectInput("add_stock_region", "Stock region", choices = c("US", "EU")),
           actionButton("add_stock_symbol_btn", "Add", icon("plus")),
           title = "Input",
@@ -171,7 +171,7 @@ body = dashboardBody(tabItems(
       tabPanel(
         "Remove",
         box(
-          selectInput("remove_stock_symbol", "Remove a stock from this site", ""),
+          selectInput("remove_stock_symbol", "Remove a stock from profiles & OHLC, not from transactions!", ""),
           actionButton("remove_stock_symbol_btn", "Remove", icon("minus")),
           title = "Input",
           status = "primary",
@@ -209,7 +209,7 @@ body = dashboardBody(tabItems(
   tabItem(
     tabName = "candlestick",
     box(
-      selectInput("cs_symbol", "", ""),
+      selectInput("cs_key", "", ""),
       radioButtons(
         "cs_window",
         "",
@@ -246,7 +246,7 @@ body = dashboardBody(tabItems(
   tabItem(
     tabName = "benchmark",
     box(
-      selectInput("bench_symbol", "Stock", ""),
+      selectInput("bench_key", "Stock", ""),
       selectInput("bench_base", "Benchmark", ""),
       radioButtons(
         "bench_window",
@@ -314,7 +314,7 @@ body = dashboardBody(tabItems(
       tabPanel(
         "Timing",
         box(
-          selectInput("timing_symbol", "Stock", ""),
+          selectInput("timing_key", "Stock", ""),
           radioButtons(
             "timing_window",
             "",

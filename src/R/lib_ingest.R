@@ -83,12 +83,24 @@ extract_usefull_company_profile_from_json = function(json_txt) {
 
 
 #' collect the OHLC data of a given stock yahoo api via quantmod
-#'
+#' 
+#' Note: All days in the window [start_date, end_date] that are closing days on the exchange are omitted from the result.
+#' If the exchange was closed on start_date the first row of output will correspond to the first day after the start_date where the exchange was open again. 
+#' If the exchange was closed on end_date the last row of output will correspond to the last day before the end_date where the exchange was still open.
+#' 
 #' @param symbol symbol known by yahoo finance to identify the stock
-#' @param start_date date object 
+#' @param start_date date object, 
 #' @param end_date date object 
 #'
-#' @return a data.table containing the OHLC information of a stock 
+#' @return a data.table containing the OHLC information of a stock with structure:
+#'         - symbol: character
+#'         - date: Date
+#'         - open: numeric
+#'         - high: numeric
+#'         - low: numeric
+#'         - close: numeric
+#'         - volume: numeric
+#'         - adjusted: numeric
 #' @export
 get_ohlc_from_api = function(symbol, start_date, end_date) {
   # symbol always upper case
