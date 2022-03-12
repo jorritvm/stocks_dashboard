@@ -1,5 +1,18 @@
 # dt = as.data.table(read.xlsx(file.choose()))
 
+#' import bolero upload file into transaction table
+#'
+#' @param dt content of a bolero upload file as a data.table with structure
+#'         - Datum: numeric
+#'         - Transactie: character
+#'         - Type.effect: character
+#'         - Details: character
+#'         - Waarde: numeric
+#'         - Munt: character
+#'         - symbol: character
+#'
+#' @return nothing
+#' @export
 import_bolero_transaction_log = function(dt) { 
   # fix types
   dt[, date := ymd(numeric_date_to_iso8601(Datum))]
@@ -9,7 +22,7 @@ import_bolero_transaction_log = function(dt) {
   dt[, Event := ""]
   dt[Details %like% "Aankoop", Event := "Aankoop"]
   dt[Details %like% "Verkoop", Event := "Verkoop"]
-  dt[Details %like% "Provisionering", Event := "cash_in"]
+  dt[Details %like% "Provisionering|Terugstorting", Event := "cash_in"]
   
   dt[, bolero_description := str_trim(gsub("Aankoop|Verkoop|Online", "", Details))]
   
@@ -42,7 +55,7 @@ import_bolero_transaction_log = function(dt) {
   dt_p = dt1 %>% 
     left_join(df_ohlc, by = c("yahoo" = "symbol", "date")) %>%
     mutate(Aantal = round(abs(Waarde) / price))
-  dt_p 
+  # dt_p 
   
   # subset rows for  cash operations
   dt2 = dt[Event %in% c("cash_in", "cash_out")]
@@ -83,19 +96,21 @@ safe_write_bolero_map = function(upload_bolero_yahoo_map) {
   # get the bolero map we already have
   bolero_yahoo_map_db = dbReadTable(con, "bolero_map")
   
-  # keep values that are not yet in the DB
-  new_bolero_yahoo_items = 
-    anti_join(upload_bolero_yahoo_map, 
-              bolero_yahoo_map_db, 
-              by = c("bolero", "yahoo"))
-  
-  if (nrow(new_bolero_yahoo_items) > 0) {
-    # upload new entries to the db
-    dbAppendTable(con, "bolero_map", new_bolero_yahoo_items)
+  if (nrow(upload_bolero_yahoo_map) > 0) {
+    # keep values that are not yet in the DB
+    new_bolero_yahoo_items = 
+      anti_join(upload_bolero_yahoo_map, 
+                bolero_yahoo_map_db, 
+                by = c("bolero", "yahoo"))
     
-    # make sure to also add the new stocks to the DB
-    for (i in 1:nrow(new_bolero_yahoo_items)) {
-      add_stock(new_bolero_yahoo_items[i, yahoo])
+    if (nrow(new_bolero_yahoo_items) > 0) {
+      # upload new entries to the db
+      dbAppendTable(con, "bolero_map", new_bolero_yahoo_items)
+      
+      # make sure to also add the new stocks to the DB
+      for (i in 1:nrow(new_bolero_yahoo_items)) {
+        add_stock(new_bolero_yahoo_items[i, yahoo])
+      }
     }
   }
   
