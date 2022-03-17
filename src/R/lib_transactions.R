@@ -99,7 +99,8 @@ get_current_position_per_stock_and_broker = function(tr) {
   
   # add latest evaluation
   trp = trp %>% 
-    left_join(get_latest_close(), by = "symbol")
+    left_join(get_latest_close(), by = "symbol") %>% 
+    copy()
   trp[, latest_value := amount * price_adj]
   trp[, latest_close := NULL][]
   

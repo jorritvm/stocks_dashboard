@@ -115,6 +115,9 @@ get_ohlc_from_api = function(symbol, start_date, end_date) {
   subset_string = paste0(as.character(start_date), "/", as.character(end_date))
   query_result = query_result[subset_string]
   
+  # remove tail NA
+  query_result = query_result[ seq( max(which(!is.na(query_result$Close))) ) ]
+  
   # fill NA with last observation
   ohlc_without_na = na.locf(query_result) 
   
@@ -162,6 +165,42 @@ update_all_ohlc = function() {
   
   # close
   dbDisconnect(con)  
+}
+
+wipe_ohlc = function() {
+  # open the db connection
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  
+  # delete OHLC data
+  query = 'DELETE
+             FROM 
+                stock_ohlc'
+  dbExecute(con, query)
+  
+  # close
+  dbDisconnect(con) 
+  
+  print("OHLC wiped")
+}
+
+reset_ohlc = function() {
+  
+  wipe_ohlc()
+
+  # fetch anew for every symbol in the profiles table
+  symbols = rv$profiles$symbol
+  for (symbol in symbols) { 
+    # get OHLC
+    start_date = today() - 10000
+    end_date = today()- 0
+    ohlc = get_ohlc_from_api(symbol, start_date, end_date)
+    # sometimes the API fucks up and gives us duplicate symbol-date entries -> fix that here:
+    ohlc = ohlc[, .SD[1], by = .(symbol, date)]
+    safe_write_ohlc_data(ohlc)
+  }
+  
+  print("OHLC data reset")
 }
 
 
