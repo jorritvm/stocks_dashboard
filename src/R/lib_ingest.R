@@ -176,6 +176,11 @@ update_all_ohlc = function() {
   dbDisconnect(con)  
 }
 
+
+#' clear the stocks_ohlc table
+#'
+#' @return
+#' @export
 wipe_ohlc = function() {
   # open the db connection
   db_fpfn = get_db_location()
@@ -193,6 +198,11 @@ wipe_ohlc = function() {
   print("OHLC wiped")
 }
 
+
+#' clear and repopulate the stocks_ohlc table with data for all stocks in the profiles table
+#'
+#' @return
+#' @export
 reset_ohlc = function() {
   
   wipe_ohlc()

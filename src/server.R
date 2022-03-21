@@ -227,7 +227,8 @@ server = function(input, output, session) {
   # update plot
   output$cs_plot = renderPlotly({
     plot_candlestick(input$cs_key,
-                     input$cs_window)
+                     input$cs_window,
+                     rv$profiles)
   })
   
   ################################

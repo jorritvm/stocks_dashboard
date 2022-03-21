@@ -30,11 +30,15 @@ window_to_start_end_dates = function(window) {
 #'
 #' @return
 #' @export
-plot_candlestick = function(key,
-                            window) {
+plot_candlestick = function(k,
+                            window,
+                            profiles) {
+  
+  # get profile info
+  profile = profiles[key == k]
   
   # get symbol
-  sym = key_to_symbol(key)
+  sym = key_to_symbol(k)
   
   # translate window to start & end days
   w = window_to_start_end_dates(window)
@@ -46,7 +50,7 @@ plot_candlestick = function(key,
   fig <- data %>% plot_ly(x = ~date, type="candlestick",
                           open = ~open, close = ~close,
                           high = ~high, low = ~low) 
-  fig <- fig %>% layout(xaxis = list(rangeslider = list(visible = F)))
+  fig <- fig %>% layout(xaxis = list(rangeslider = list(visible = F)),  yaxis = list(title = paste0("Close [",profile$currency, "]")))
   fig <- fig %>% add_lines(x = ~date, y = ~close, line = list(color = 'black', width = 0.75), inherit = FALSE)
   fig <- fig %>% layout(showlegend = FALSE)
   
