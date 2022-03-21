@@ -16,6 +16,7 @@ server = function(input, output, session) {
     added_fx = "",
     removed_fx = "",
     updated_fx = FALSE,
+    focus_stock = "",
     profiles = get_stock_profiles(),
     added_symbol = "",
     removed_symbol = "",
@@ -135,10 +136,10 @@ server = function(input, output, session) {
   ################################
   ### PAGE: PROFILE A STOCK
   # update input list
-  observeEvent(input$profile_stock_key, { updateSelectInput(session = session, inputId = "cs_key", selected = input$profile_stock_key) })
-  observeEvent(input$profile_stock_key, { updateSelectInput(session = session, inputId = "bench_key", selected = input$profile_stock_key) })
-  
-   observe({
+  observeEvent(input$profile_stock_key, { rv$focus_stock = input$profile_stock_key })
+  observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "profile_stock_key", selected = rv$focus_stock) })
+   
+  observe({
     updateSelectInput(session,
                       "profile_stock_key",
                       label = NULL,
@@ -153,8 +154,8 @@ server = function(input, output, session) {
   ################################
   ### PAGE: CANDLESTICK
   # update input list
-  observeEvent(input$cs_key, { updateSelectInput(session = session, inputId = "profile_stock_key", selected = input$cs_key) })
-  observeEvent(input$cs_key, { updateSelectInput(session = session, inputId = "bench_key", selected = input$cs_key) })
+  observeEvent(input$cs_key, { rv$focus_stock = input$cs_key })
+  observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "cs_key", selected = rv$focus_stock) })
   
   observe({
     updateSelectInput(session,
@@ -172,8 +173,8 @@ server = function(input, output, session) {
   ################################
   ### PAGE: BENCHMARK
   # update input list
-  observeEvent(input$bench_key, { updateSelectInput(session = session, inputId = "profile_stock_key", selected = input$bench_key) })
-  observeEvent(input$bench_key, { updateSelectInput(session = session, inputId = "cs_key", selected = input$bench_key) })
+  observeEvent(input$bench_key, { rv$focus_stock = input$bench_key })
+  observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "bench_key", selected = rv$focus_stock) })
   
   observe({
     updateSelectInput(session,
@@ -291,6 +292,9 @@ server = function(input, output, session) {
   
   ################################
   ### PAGE: market timing
+  observeEvent(input$timing_key, { rv$focus_stock = input$timing_key })
+  observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "timing_key", selected = rv$focus_stock) })
+  
   observe({
     updateSelectInput(session,
                       "timing_key",
