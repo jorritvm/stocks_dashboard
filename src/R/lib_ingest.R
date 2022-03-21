@@ -115,15 +115,22 @@ get_ohlc_from_api = function(symbol, start_date, end_date) {
   subset_string = paste0(as.character(start_date), "/", as.character(end_date))
   query_result = query_result[subset_string]
   
-  # remove tail NA
-  query_result = query_result[ seq( max(which(!is.na(query_result$Close))) ) ]
-  
-  # fill NA with last observation
-  ohlc_without_na = na.locf(query_result) 
-  
   # convert to data table
-  dt_ohlc = as.data.table(ohlc_without_na)
+  dt_ohlc = as.data.table(query_result)
   setnames(dt_ohlc, "index", "date")
+  
+  # if all rows are just NA make table empty
+  if (sum(complete.cases(dt_ohlc)) == 0) {
+    dt_ohlc = dt_ohlc[0]  
+  }
+  
+  if (nrow(dt_ohlc) > 0) {
+    # remove tail NA
+    dt_ohlc = dt_ohlc[ seq( max(which(!is.na(dt_ohlc$Close))) ) ]
+    
+    # fill NA with last observation
+    dt_ohlc = na.locf(dt_ohlc) 
+  }
   
   # add symbol info
   dt_ohlc[, symbol := symbol]
@@ -151,15 +158,17 @@ update_all_ohlc = function() {
     start_date = latest_close[i, latest_close]
     end_date = today()
     
-    if ((end_date - start_date) > 1) {
+    if ((end_date - start_date) > 1) {i
       new_ohlc_data = get_ohlc_from_api(symbol, start_date + days(1), end_date)     
-      new_ohlc_data = new_ohlc_data %>% mutate(date = format_ISO8601(date))
-      
-      # sometimes the API fucks up and gives us duplicate symbol-date entries -> fix that here:
-      new_ohlc_data = new_ohlc_data[, .SD[1], by = .(symbol, date)]
-      
-      # write the record  
-      dbAppendTable(con, "stock_ohlc", new_ohlc_data)
+      if (nrow(new_ohlc_data) > 0) {
+        new_ohlc_data = new_ohlc_data %>% mutate(date = format_ISO8601(date))
+        
+        # sometimes the API fucks up and gives us duplicate symbol-date entries -> fix that here:
+        new_ohlc_data = new_ohlc_data[, .SD[1], by = .(symbol, date)]
+        
+        # write the record  
+        dbAppendTable(con, "stock_ohlc", new_ohlc_data)
+      }
     }
   }
   

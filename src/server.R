@@ -248,7 +248,7 @@ server = function(input, output, session) {
       "bench_base",
       label = NULL,
       choices = rv$profiles$key,
-      selected = def
+      selected = rv$profiles[symbol == def, "key"]
     )
   })
   # update plot
