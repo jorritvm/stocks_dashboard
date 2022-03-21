@@ -104,7 +104,7 @@ plot_benchmark = function(key,
     scale_x_date(date_breaks = "1 month",
                  limits = c(start, w$end),
                  expand = c(0,0)) +
-    labs(x = "Date", y = "Relative gain")
+    labs(x = "Date", y = "Relative gain [%]")
   
   return(fig)
 }
@@ -221,11 +221,24 @@ calculate_market_timing = function(timing_key, timing_window, tr) {
   #valuate
   trsub[, value := close * position]
   trsub[, holding := (position != 0) * close]
+  
+  # add symbol
+  trsub[, symbol := timing_symbol]
 
   return(trsub)
 }
  
-plot_market_timing_p = function(trsub) {
+#' create a plot that shows price evolution of a stock and colors the region where you are holding that stock
+#'
+#' @param trsub 
+#' @param profiles 
+#'
+#' @return
+#' @export
+plot_market_timing_p = function(trsub, profiles) {
+  s = trsub[1, symbol]
+  profile = profiles[symbol == s]
+
   start = min(trsub$date)
   end = max(trsub$date)
   # plot 
@@ -238,12 +251,18 @@ plot_market_timing_p = function(trsub) {
       scale_x_date(
                  limits = c(start, end),
                  expand = c(0,0)) +
-      labs(y = "Stock value") + 
+      labs(y = paste0("Stock value [", profile$currency, "]")) + 
       theme(legend.position = "none")
            
   return(p)
 }
 
+#' create a plot that show how many units of a stock you are holding over time
+#'
+#' @param trsub 
+#'
+#' @return
+#' @export
 plot_market_timing_q = function(trsub) {
   start = min(trsub$date)
   end = max(trsub$date)
@@ -255,13 +274,24 @@ plot_market_timing_q = function(trsub) {
     scale_x_date(
       limits = c(start, end),
       expand = c(0,0)) +
-    labs(y = "Position # holding") + 
+    labs(y = "Position holding [#]") + 
     theme(legend.position = "none")
   
   return(p)
 }
 
-plot_market_timing_v = function(trsub) {
+
+#' create a plot that shows how much value of a stock you are holding over time
+#'
+#' @param trsub 
+#' @param profiles 
+#'
+#' @return
+#' @export
+plot_market_timing_v = function(trsub, profiles) {
+  s = trsub[1, symbol]
+  profile = profiles[symbol == s]
+  
   start = min(trsub$date)
   end = max(trsub$date)
   # plot 
@@ -272,7 +302,7 @@ plot_market_timing_v = function(trsub) {
     scale_x_date(
       limits = c(start, end),
       expand = c(0,0)) +
-    labs(y = "Position # holding") + 
+    labs(y =  paste0("Value holding [", profile$currency, "]")) +
     theme(legend.position = "none")
   
   return(p)

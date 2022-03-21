@@ -292,9 +292,9 @@ server = function(input, output, session) {
                             rv$tr)
   })
   
-  output$market_timing_p = renderPlot(plot_market_timing_p(trsub()))
+  output$market_timing_p = renderPlot(plot_market_timing_p(trsub(), rv$profiles))
   output$market_timing_q = renderPlot(plot_market_timing_q(trsub()))
-  output$market_timing_v = renderPlot(plot_market_timing_v(trsub()))
+  output$market_timing_v = renderPlot(plot_market_timing_v(trsub(), rv$profiles))
   
   ################################
   ### PAGE: list all transactions
