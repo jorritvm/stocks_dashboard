@@ -177,6 +177,37 @@ get_ohlc = function(sym, start_date = NULL, end_date = NULL) {
   return(result)
 }
 
+
+#' read entire OHLC table and return data.table
+#'
+#' @return a data.table containing OHLC data for all symbols with structure:
+#'         - symbol: character
+#'         - date: Date
+#'         - open: numeric
+#'         - high: numeric
+#'         - low: numeric
+#'         - close: numeric
+#'         - volume: numeric
+#'         - adjusted: numeric
+#' @export
+get_all_ohlc = function() {
+  # open the db connection
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  
+  # use some dplyr for the select query
+  result = tbl(con, "stock_ohlc") %>%
+      as.data.table()
+  result = result %>%
+    mutate(date = ymd(date))
+  
+  # close
+  dbDisconnect(con)  
+  
+  return(result)
+}
+
+
 #' safely write a stock OHLC data to the DB
 #' 
 #' if part of the OHLC already exists this first deletes the old info, 

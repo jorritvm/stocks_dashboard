@@ -36,6 +36,28 @@ get_fx = function(fx_symbol, start = NULL, end = NULL) {
 }
 
 
+#' returns FX data for all symbol(s)
+#'
+#' @return data.table
+#' @export
+get_all_fx = function() {
+  # open the db connection
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  
+  # use some dplyr for the select query
+  result = tbl(con, "fx_rates") %>%
+    as.data.table()
+  result = result %>%
+    mutate(date = ymd(date))
+  
+  # select the symbols already in the data table
+  dbDisconnect(con)  
+  
+  return(result)
+}
+
+
 #' returns a small table with for each fx the latest date & value
 #'
 #' @return

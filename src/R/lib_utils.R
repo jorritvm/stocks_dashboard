@@ -2,6 +2,39 @@
 # NEW
 ##########################
 
+#' LOCF where leading NA are filled out using FOCB
+#'
+#' @param x 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' x = c(NA,NA, 1,2,3,NA,4,5,NA)
+#' na.locf.cb(x)
+na.locf.cb = function(x) {
+  y = na.locf(x, na.rm = FALSE)
+  z = na.locf(y, fromLast = TRUE)
+  return(z)
+}
+
+#' LOCF where leading NA are replaced with 0
+#'
+#' @param x 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' x = c(NA,NA, 1,2,3,NA,4,5,NA)
+#' na.locf.0b(x)
+na.locf.0b = function(x) {
+  y = na.locf(x, na.rm = FALSE)
+  y[is.na(y)] = 0
+  return(y)
+}
+
+
 #' cuts the symbol from a key string "symbol | company"
 #'
 #' @param key string "symbol | company"

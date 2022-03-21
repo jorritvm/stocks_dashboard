@@ -308,17 +308,7 @@ plot_market_timing_v = function(trsub, profiles) {
   return(p)
 }
 
-na.locf.cb = function(x) {
-  y = na.locf(x, na.rm = FALSE)
-  z = na.locf(y, fromLast = TRUE)
-  return(z)
-}
 
-na.locf.0b = function(x) {
-  y = na.locf(x, na.rm = FALSE)
-  y[is.na(y)] = 0
-  return(y)
-}
 
 standardize = function(x) {
   return((x-min(x))/(max(x)-min(x)))

@@ -93,7 +93,7 @@ get_current_position_per_stock_and_broker = function(tr) {
   trp = trp[type == "transfer_out", amount := amount * -1]
   
   # aggregate transactions to current position
-  trp = trp[type != "div", 
+  trp = trp[type != "div" & !type %like% "cash", 
             .(amount = sum(amount)), 
             by = .(symbol, account)][amount != 0]
   
