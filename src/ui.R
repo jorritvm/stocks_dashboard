@@ -4,19 +4,145 @@ header = dashboardHeader(title = "Stocks dashboard")
 
 sidebar = dashboardSidebar(
   sidebarMenu(
-    menuItem("Home", tabName = "home"),
+    menuItem("Portfolio", tabName = "portfolio"),
     menuItem("Currencies", tabName = "currencies"),
     menuItem("Stocks", tabName = "stocks"),
-    menuItem("Candlestick", tabName = "candlestick"),
-    menuItem("Benchmark", tabName = "benchmark"),
-    menuItem("Portfolio", tabName = "portfolio"),
+    menuItem("About", tabName = "about"),
     actionButton("debug_btn", label = "debug") # TODO: remove this at the end
   )
 )
 
 body = dashboardBody(tabItems(
-  tabItem(tabName = "home",
-          img(src = "wsb.jpg")),
+  tabItem(
+    tabName = "portfolio",
+    navbarPage(
+      title = "",
+      tabPanel(
+        "Position",
+        box(
+          plotlyOutput("position_per_broker"),
+          title = "Position per account",
+          status = "info",
+          solidHeader = TRUE,
+          width = 12
+        ),
+        box(
+          plotlyOutput("position_per_stock"),
+          title = "Position per stock",
+          status = "info",
+          solidHeader = TRUE,
+          width = 12
+        )
+      ),
+      tabPanel(
+        "Performance",
+        box(
+          plotlyOutput("total_performance"),
+          title = "Total performance",
+          status = "info",
+          solidHeader = TRUE,
+          width = 12
+        )
+      ),
+      tabPanel(
+        "Timing",
+        box(
+          selectInput("timing_key", "Stock", ""),
+          radioButtons(
+            "timing_window",
+            "",
+            choices = list(
+              "All" = "all",
+              "5Y" = "5Y",
+              "3Y" = "3Y",
+              "2Y" = "2Y",
+              "1Y" = "1Y",
+              "YTD" = "YTD",
+              "6M" = "6M",
+              "3M" = "3M",
+              "1M" = "1M",
+              "2W" = "2W",
+              "1W" = "1W"
+            ),
+            selected = "YTD",
+            inline = TRUE
+          ),
+          title = "Input",
+          status = "primary",
+          solidHeader = TRUE,
+          width = 12
+        ),
+        box(
+          plotOutput("market_timing_p"),
+          plotOutput("market_timing_q"),
+          plotOutput("market_timing_v"),
+          title = "Market timing",
+          status = "info",
+          solidHeader = TRUE,
+          width = 12
+        )
+      ),
+      tabPanel("Transactions",
+               DTOutput("transactions_table")),
+      tabPanel(
+        "Batch upload",
+        box(
+          tags$p("Upload an excel file with at these named columns:"),
+          tags$ol(
+            tags$li(HTML("<b>symbol:</b> yahoo ticker")),
+            tags$li(
+              HTML("<b>date:</b> date of transaction using ISO8601 date format")
+            ),
+            tags$li(HTML(
+              "<b>type:</b> should be 'buy', 'sell', 'div', 'cash_in', 'cash_out', 'transfer_in', 'transfer_out'"
+            )),
+            tags$li(HTML("<b>amount:</b> amount of shares")),
+            tags$li(HTML(
+              "<b>money:</b> total revenue/cost of the transaction"
+            )),
+            tags$li(
+              HTML(
+                "<b>currency:</b> 3 letter abbreviation for the currency of the money column"
+              )
+            )
+          ),
+          tags$p(
+            "For amount & money, the sign will not matter, type is used to determine sign."
+          ),
+          tags$p(
+            "If money is not given for a buy or sell order, closing price will be used."
+          ),
+          tags$p("If currency is not given, original stock currency will be used."),
+          title = "Readme",
+          status = "info",
+          solidHeader = TRUE,
+          width = 12
+        ),
+        box(
+          fileInput(
+            "batch_portfolio_file",
+            "Choose XLSX File",
+            multiple = FALSE,
+            accept = c(
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              ".xlsx"
+            )
+          ),
+          title = "Upload",
+          status = "primary",
+          solidHeader = TRUE,
+          width = 12
+        ),
+        box(
+          textOutput("update_transaction_text"),
+          title = "Info",
+          status = "info",
+          solidHeader = TRUE,
+          width = 12
+        )
+      )
+    )
+  ),
   
   tabItem(
     tabName = "currencies",
@@ -147,6 +273,79 @@ body = dashboardBody(tabItems(
           width = 12
         )
       ),
+      tabPanel(
+        "Candlestick",
+        box(
+          selectInput("cs_key", "", ""),
+          radioButtons(
+            "cs_window",
+            "",
+            choices = list(
+              "All" = "all",
+              "5Y" = "5Y",
+              "3Y" = "3Y",
+              "2Y" = "2Y",
+              "1Y" = "1Y",
+              "YTD" = "YTD",
+              "6M" = "6M",
+              "3M" = "3M",
+              "1M" = "1M",
+              "2W" = "2W",
+              "1W" = "1W"
+            ),
+            selected = "YTD",
+            inline = TRUE
+          ),
+          title = "Input",
+          status = "primary",
+          solidHeader = TRUE,
+          width = 12
+        ),
+        box(
+        plotlyOutput("cs_plot"),
+        title = "Graph",
+        status = "info",
+        solidHeader = TRUE,
+        width = 12
+      )
+    ),
+    tabPanel(
+      "Benchmark",
+      box(
+        selectInput("bench_key", "Stock", ""),
+        selectInput("bench_base", "Benchmark", ""),
+        radioButtons(
+          "bench_window",
+          "",
+          choices = list(
+            "All" = "all",
+            "5Y" = "5Y",
+            "3Y" = "3Y",
+            "2Y" = "2Y",
+            "1Y" = "1Y",
+            "YTD" = "YTD",
+            "6M" = "6M",
+            "3M" = "3M",
+            "1M" = "1M",
+            "2W" = "2W",
+            "1W" = "1W"
+          ),
+          selected = "YTD",
+          inline = TRUE
+        ),
+        title = "Input",
+        status = "primary",
+        solidHeader = TRUE,
+        width = 12
+      ),
+      box(
+        plotlyOutput("bench_plot"),
+        title = "Graph",
+        status = "info",
+        solidHeader = TRUE,
+        width = 12
+      )
+    ),
       
       tabPanel(
         "Add",
@@ -205,211 +404,9 @@ body = dashboardBody(tabItems(
       )
     )
   ),
-  
-  tabItem(
-    tabName = "candlestick",
-    box(
-      selectInput("cs_key", "", ""),
-      radioButtons(
-        "cs_window",
-        "",
-        choices = list(
-          "All" = "all",
-          "5Y" = "5Y",
-          "3Y" = "3Y",
-          "2Y" = "2Y",
-          "1Y" = "1Y",
-          "YTD" = "YTD",
-          "6M" = "6M",
-          "3M" = "3M",
-          "1M" = "1M",
-          "2W" = "2W",
-          "1W" = "1W"
-        ),
-        selected = "YTD",
-        inline = TRUE
-      ),
-      title = "Input",
-      status = "primary",
-      solidHeader = TRUE,
-      width = 12
-    ),
-    box(
-      plotlyOutput("cs_plot"),
-      title = "Graph",
-      status = "info",
-      solidHeader = TRUE,
-      width = 12
-    )
-  ),
-  
-  tabItem(
-    tabName = "benchmark",
-    box(
-      selectInput("bench_key", "Stock", ""),
-      selectInput("bench_base", "Benchmark", ""),
-      radioButtons(
-        "bench_window",
-        "",
-        choices = list(
-          "All" = "all",
-          "5Y" = "5Y",
-          "3Y" = "3Y",
-          "2Y" = "2Y",
-          "1Y" = "1Y",
-          "YTD" = "YTD",
-          "6M" = "6M",
-          "3M" = "3M",
-          "1M" = "1M",
-          "2W" = "2W",
-          "1W" = "1W"
-        ),
-        selected = "YTD",
-        inline = TRUE
-      ),
-      title = "Input",
-      status = "primary",
-      solidHeader = TRUE,
-      width = 12
-    ),
-    box(
-      plotlyOutput("bench_plot"),
-      title = "Graph",
-      status = "info",
-      solidHeader = TRUE,
-      width = 12
-    )
-  ),
-  tabItem(
-    tabName = "portfolio",
-    navbarPage(
-      title = "",
-      tabPanel(
-        "Position",
-        box(
-          plotlyOutput("position_per_broker"),
-          title = "Position per account",
-          status = "info",
-          solidHeader = TRUE,
-          width = 12
-        ),
-        box(
-          plotlyOutput("position_per_stock"),
-          title = "Position per stock",
-          status = "info",
-          solidHeader = TRUE,
-          width = 12
-        )
-      ),
-      tabPanel(
-        "Performance",
-        box(
-          plotlyOutput("total_performance"),
-          title = "Total performance",
-          status = "info",
-          solidHeader = TRUE,
-          width = 12
-        )
-      ),
-      tabPanel(
-        "Timing",
-        box(
-          selectInput("timing_key", "Stock", ""),
-          radioButtons(
-            "timing_window",
-            "",
-            choices = list(
-              "All" = "all",
-              "5Y" = "5Y",
-              "3Y" = "3Y",
-              "2Y" = "2Y",
-              "1Y" = "1Y",
-              "YTD" = "YTD",
-              "6M" = "6M",
-              "3M" = "3M",
-              "1M" = "1M",
-              "2W" = "2W",
-              "1W" = "1W"
-            ),
-            selected = "YTD",
-            inline = TRUE
-          ),
-          title = "Input",
-          status = "primary",
-          solidHeader = TRUE,
-          width = 12
-        ),
-        box(
-          plotOutput("market_timing_p"),
-          plotOutput("market_timing_q"),
-          plotOutput("market_timing_v"),
-          title = "Market timing",
-          status = "info",
-          solidHeader = TRUE,
-          width = 12
-        )
-      ),
-      tabPanel("Transactions",
-               DTOutput("transactions_table")),
-      tabPanel(
-        "Batch upload",
-        box(
-          tags$p("Upload an excel file with at these named columns:"),
-          tags$ol(
-            tags$li(HTML("<b>symbol:</b> yahoo ticker")),
-            tags$li(
-              HTML("<b>date:</b> date of transaction using ISO8601 date format")
-            ),
-            tags$li(HTML(
-              "<b>type:</b> should be 'buy', 'sell', 'div', 'cash_in', 'cash_out', 'transfer_in', 'transfer_out'"
-            )),
-            tags$li(HTML("<b>amount:</b> amount of shares")),
-            tags$li(HTML(
-              "<b>money:</b> total revenue/cost of the transaction"
-            )),
-            tags$li(
-              HTML(
-                "<b>currency:</b> 3 letter abbreviation for the currency of the money column"
-              )
-            )
-          ),
-          tags$p(
-            "For amount & money, the sign will not matter, type is used to determine sign."
-          ),
-          tags$p(
-            "If money is not given for a buy or sell order, closing price will be used."
-          ),
-          tags$p("If currency is not given, original stock currency will be used."),
-          title = "Readme",
-          status = "info",
-          solidHeader = TRUE,
-          width = 12
-        ),
-        box(
-          fileInput(
-            "batch_portfolio_file",
-            "Choose XLSX File",
-            multiple = FALSE,
-            accept = c(
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-              ".xlsx"
-            )
-          ),
-          title = "Upload",
-          status = "primary",
-          solidHeader = TRUE,
-          width = 12
-        ),
-        box(
-          textOutput("update_transaction_text"),
-          title = "Info",
-          status = "info",
-          solidHeader = TRUE,
-          width = 12
-        )
-      )
-    )
-  )
+
+  tabItem(tabName = "about",
+          img(src = "wsb.jpg"))
 ))
 
 

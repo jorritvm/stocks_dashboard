@@ -27,7 +27,7 @@ server = function(input, output, session) {
   ################################
   ### PAGE: LIST ALL FX
   # update table
-  output$fx_list = renderDT(rv$fx)
+  output$fx_list = renderDT(rv$fx, options = list("pageLength" = 50))
   
   # update input list
   observe({
@@ -129,7 +129,7 @@ server = function(input, output, session) {
   ################################
   ### PAGE: LIST ALL STOCKS
   # update table
-  output$stock_list = renderDT(get_stock_key_info(rv$profiles))
+  output$stock_list = renderDT(get_stock_key_info(rv$profiles), options = list("pageLength" = 50))
   
   ################################
   ### PAGE: PROFILE A STOCK
@@ -298,7 +298,7 @@ server = function(input, output, session) {
   
   ################################
   ### PAGE: list all transactions
-  output$transactions_table = renderDT(rv$tr)
+  output$transactions_table = renderDT(rv$tr, options = list("pageLength" = 50))
   
   
   ################################
