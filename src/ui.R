@@ -13,7 +13,8 @@ sidebar = dashboardSidebar(
 )
 
 body = dashboardBody(tabItems(
-  tabItem(
+
+    tabItem(
     tabName = "portfolio",
     navbarPage(
       title = "",
@@ -29,6 +30,42 @@ body = dashboardBody(tabItems(
         box(
           plotlyOutput("position_per_stock"),
           title = "Position per stock",
+          status = "info",
+          solidHeader = TRUE,
+          width = 12
+        )
+      ),
+      tabPanel(
+        "Plot",
+        box(
+          selectInput("pf_broker", "Select broker", ""),
+          radioButtons(
+            "pf_window",
+            "",
+            choices = list(
+              "All" = "all",
+              "5Y" = "5Y",
+              "3Y" = "3Y",
+              "2Y" = "2Y",
+              "1Y" = "1Y",
+              "YTD" = "YTD",
+              "6M" = "6M",
+              "3M" = "3M",
+              "1M" = "1M",
+              "2W" = "2W",
+              "1W" = "1W"
+            ),
+            selected = "YTD",
+            inline = TRUE
+          ),
+          title = "Input",
+          status = "primary",
+          solidHeader = TRUE,
+          width = 12
+        ),
+        box(
+          plotlyOutput("pf_plot"),
+          title = "Portfolio evolution",
           status = "info",
           solidHeader = TRUE,
           width = 12
@@ -144,6 +181,7 @@ body = dashboardBody(tabItems(
     )
   ),
   
+  
   tabItem(
     tabName = "currencies",
     
@@ -247,6 +285,7 @@ body = dashboardBody(tabItems(
       )
     )
   ),
+  
   
   tabItem(
     tabName = "stocks",
@@ -404,6 +443,7 @@ body = dashboardBody(tabItems(
       )
     )
   ),
+  
 
   tabItem(tabName = "about",
           img(src = "wsb.jpg"))

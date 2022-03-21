@@ -21,8 +21,9 @@ server = function(input, output, session) {
     removed_symbol = "",
     updated_ohlc = FALSE,
     tr = get_transactions(),
-    updated_transactions = FALSE
+    updated_transactions = FALSE,
   )
+  # rv2 = reactiveValues(portfolio_positions = expand_transactions_to_portfolio_positions(rv$tr))
   
   ################################
   ### PAGE: LIST ALL FX
@@ -134,7 +135,10 @@ server = function(input, output, session) {
   ################################
   ### PAGE: PROFILE A STOCK
   # update input list
-  observe({
+  observeEvent(input$profile_stock_key, { updateSelectInput(session = session, inputId = "cs_key", selected = input$profile_stock_key) })
+  observeEvent(input$profile_stock_key, { updateSelectInput(session = session, inputId = "bench_key", selected = input$profile_stock_key) })
+  
+   observe({
     updateSelectInput(session,
                       "profile_stock_key",
                       label = NULL,
@@ -144,6 +148,56 @@ server = function(input, output, session) {
   # update table
   output$profile_stock_table = renderTable({
     get_stock_profile_table(input$profile_stock_key)
+  })
+  
+  ################################
+  ### PAGE: CANDLESTICK
+  # update input list
+  observeEvent(input$cs_key, { updateSelectInput(session = session, inputId = "profile_stock_key", selected = input$cs_key) })
+  observeEvent(input$cs_key, { updateSelectInput(session = session, inputId = "bench_key", selected = input$cs_key) })
+  
+  observe({
+    updateSelectInput(session,
+                      "cs_key",
+                      label = NULL,
+                      choices = rv$profiles$key)
+  })
+  # update plot
+  output$cs_plot = renderPlotly({
+    plot_candlestick(input$cs_key,
+                     input$cs_window,
+                     rv$profiles)
+  })
+  
+  ################################
+  ### PAGE: BENCHMARK
+  # update input list
+  observeEvent(input$bench_key, { updateSelectInput(session = session, inputId = "profile_stock_key", selected = input$bench_key) })
+  observeEvent(input$bench_key, { updateSelectInput(session = session, inputId = "cs_key", selected = input$bench_key) })
+  
+  observe({
+    updateSelectInput(session,
+                      "bench_key",
+                      label = NULL,
+                      choices = rv$profiles$key)
+  })
+  observe({
+    def = NULL
+    if ("IWDA.AS" %in% rv$profiles$symbol)
+      def = "IWDA.AS"
+    updateSelectInput(
+      session,
+      "bench_base",
+      label = NULL,
+      choices = rv$profiles$key,
+      selected = rv$profiles[symbol == def, "key"]
+    )
+  })
+  # update plot
+  output$bench_plot = renderPlotly({
+    plot_benchmark(input$bench_key,
+                   input$bench_base,
+                   input$bench_window)
   })
   
   ################################
@@ -215,49 +269,7 @@ server = function(input, output, session) {
     rv$updated_ohlc
   })
   
-  ################################
-  ### PAGE: CANDLESTICK
-  # update input list
-  observe({
-    updateSelectInput(session,
-                      "cs_key",
-                      label = NULL,
-                      choices = rv$profiles$key)
-  })
-  # update plot
-  output$cs_plot = renderPlotly({
-    plot_candlestick(input$cs_key,
-                     input$cs_window,
-                     rv$profiles)
-  })
-  
-  ################################
-  ### PAGE: BENCHMARK
-  # update input list
-  observe({
-    updateSelectInput(session,
-                      "bench_key",
-                      label = NULL,
-                      choices = rv$profiles$key)
-  })
-  observe({
-    def = NULL
-    if ("IWDA.AS" %in% rv$profiles$symbol)
-      def = "IWDA.AS"
-    updateSelectInput(
-      session,
-      "bench_base",
-      label = NULL,
-      choices = rv$profiles$key,
-      selected = rv$profiles[symbol == def, "key"]
-    )
-  })
-  # update plot
-  output$bench_plot = renderPlotly({
-    plot_benchmark(input$bench_key,
-                   input$bench_base,
-                   input$bench_window)
-  })
+ 
   
   ################################
   ### PAGE: portfolio positions
