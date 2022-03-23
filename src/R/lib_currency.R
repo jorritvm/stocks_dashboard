@@ -146,3 +146,24 @@ remove_fx_from_db = function(fx) {
   # select the symbols already in the data table
   dbDisconnect(con)  
 }
+
+
+#' create a plot for an FX
+#'
+#' @param fx string identifier for FX
+#' @param window string representation of time window
+#'
+#' @return
+#' @export
+plot_fx = function(fx, window) {
+  # translate window to start & end days
+  w = window_to_start_end_dates(window)
+  
+  # get ohlc data
+  data = get_fx(fx, w$start, w$end)
+  
+  # plotly
+  fig <- data %>% plot_ly(x = ~date,  line = list(color = 'black', width = 0.75), y = ~rate) 
+  
+  return(fig)
+}

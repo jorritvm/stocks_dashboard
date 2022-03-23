@@ -24,8 +24,103 @@ server = function(input, output, session) {
     tr = get_transactions(),
     updated_transactions = FALSE,
   )
-  # rv2 = reactiveValues(portfolio_positions = expand_transactions_to_portfolio_positions(rv$tr))
+
+  portfolio_positions = reactive({
+    out = expand_transactions_to_portfolio_positions(rv$tr)
+  })
   
+  ################################################################
+  # PORTFOLIO TAB
+  ################################################################
+  ################################
+  ### PAGE: portfolio positions
+  output$position_per_broker = renderPlotly({
+    trp = get_current_position_per_stock_and_broker(rv$tr)
+    trpb = get_current_position_per_broker(trp)
+    plot_position_per_broker(trpb)
+  })
+  
+  output$position_per_stock = renderPlotly({
+    trp = get_current_position_per_stock_and_broker(rv$tr)
+    trps = get_current_position_per_stock(trp, rv$profiles)
+    plot_position_per_stock(trps)
+  })
+  
+  ##############################################################p
+  ### PAGE: plot
+  observeEvent(rv$tr, { updateSelectInput(session = session, inputId = "pf_broker", choices = c("All", unique(rv$tr$account))) })
+  
+  output$portfolio_position = renderPlotly({
+    plot_portfolio_evolution(input$pf_broker, input$pf_window, portfolio_positions() )
+  })
+  
+  ################################
+  ### PAGE: performance
+  output$total_performance = NULL
+  
+  ################################
+  ### PAGE: market timing
+  observeEvent(input$timing_key, { rv$focus_stock = input$timing_key })
+  observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "timing_key", selected = rv$focus_stock) })
+  
+  observe({
+    updateSelectInput(session,
+                      "timing_key",
+                      label = NULL,
+                      choices = rv$profiles$key)
+  })
+  
+  trsub = reactive({
+    calculate_market_timing(input$timing_key,
+                            input$timing_window,
+                            rv$tr)
+  })
+  
+  output$market_timing_p = renderPlot(plot_market_timing_p(trsub(), rv$profiles))
+  output$market_timing_q = renderPlot(plot_market_timing_q(trsub()))
+  output$market_timing_v = renderPlot(plot_market_timing_v(trsub(), rv$profiles))
+  
+  ################################
+  ### PAGE: list all transactions
+  output$transactions_table = renderDT(rv$tr, options = list("pageLength" = 50))
+  
+  
+  ################################
+  ### PAGE: batch upload transactions
+  # handle file upload
+  observeEvent(input$batch_portfolio_file, {
+    req(input$batch_portfolio_file)
+    
+    # read and detemrine upload file
+    dt = as.data.table(read.xlsx(input$batch_portfolio_file$datapath))
+    file_source = check_for_transaction_file_type(dt)
+    
+    # parse upload file
+    if (file_source == "saxo") {
+      import_saxo_transaction_log(dt)
+    }
+    if (file_source == "bolero") {
+      import_bolero_transaction_log(dt)
+    }
+    
+    rv$updated_transactions = rv$updated_transactions + 1
+  })
+  
+  # update status text
+  output$update_transaction_text = renderText({
+    req(rv$updated_transactions)
+    "New transactions added to the DB."
+  })
+  
+  # update transactions reactive values dataset
+  eventReactive(rv$updated_transactions, {
+    rv$updated_transactions = get_transactions()
+  })
+  
+  
+  ################################################################
+  # currencies TAB
+  ################################################################
   ################################
   ### PAGE: LIST ALL FX
   # update table
@@ -127,7 +222,9 @@ server = function(input, output, session) {
     rv$updated_fx
   })
   
-  
+  ################################################################
+  # STOCKS TAB
+  ################################################################
   ################################
   ### PAGE: LIST ALL STOCKS
   # update table
@@ -148,7 +245,9 @@ server = function(input, output, session) {
   
   # update table
   output$profile_stock_table = renderTable({
-    get_stock_profile_table(input$profile_stock_key)
+    # get_stock_profile_table(input$profile_stock_key)
+    req(input$pf_window)
+    mtcars
   })
   
   ################################
@@ -271,82 +370,6 @@ server = function(input, output, session) {
   })
   
  
-  
-  ################################
-  ### PAGE: portfolio positions
-  output$position_per_broker = renderPlotly({
-    trp = get_current_position_per_stock_and_broker(rv$tr)
-    trpb = get_current_position_per_broker(trp)
-    plot_position_per_broker(trpb)
-  })
-  
-  output$position_per_stock = renderPlotly({
-    trp = get_current_position_per_stock_and_broker(rv$tr)
-    trps = get_current_position_per_stock(trp, rv$profiles)
-    plot_position_per_stock(trps)
-  })
-  
-  ################################
-  ### PAGE: performance
-  output$total_performance = NULL
-  
-  ################################
-  ### PAGE: market timing
-  observeEvent(input$timing_key, { rv$focus_stock = input$timing_key })
-  observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "timing_key", selected = rv$focus_stock) })
-  
-  observe({
-    updateSelectInput(session,
-                      "timing_key",
-                      label = NULL,
-                      choices = rv$profiles$key)
-  })
-  
-  trsub = reactive({
-    calculate_market_timing(input$timing_key,
-                            input$timing_window,
-                            rv$tr)
-  })
-  
-  output$market_timing_p = renderPlot(plot_market_timing_p(trsub(), rv$profiles))
-  output$market_timing_q = renderPlot(plot_market_timing_q(trsub()))
-  output$market_timing_v = renderPlot(plot_market_timing_v(trsub(), rv$profiles))
-  
-  ################################
-  ### PAGE: list all transactions
-  output$transactions_table = renderDT(rv$tr, options = list("pageLength" = 50))
-  
-  
-  ################################
-  ### PAGE: batch upload transactions
-  # handle file upload
-  observeEvent(input$batch_portfolio_file, {
-    req(input$batch_portfolio_file)
-    
-    # read and detemrine upload file
-    dt = as.data.table(read.xlsx(input$batch_portfolio_file$datapath))
-    file_source = check_for_transaction_file_type(dt)
-    
-    # parse upload file
-    if (file_source == "saxo") {
-      import_saxo_transaction_log(dt)
-    }
-    if (file_source == "bolero") {
-      import_bolero_transaction_log(dt)
-    }
-    
-    rv$updated_transactions = rv$updated_transactions + 1
-  })
-  
-  # update status text
-  output$update_transaction_text = renderText({
-    req(rv$updated_transactions)
-    "New transactions added to the DB."
-  })
-  
-  # update transactions reactive values dataset
-  eventReactive(rv$updated_transactions, {
-    rv$updated_transactions = get_transactions()
-  })
+
   
 }

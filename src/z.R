@@ -6,6 +6,7 @@ rv = list(
             added_fx = "",
             removed_fx = "",
             updated_fx = FALSE,
+            focus_stock = "",
             profiles = get_stock_profiles(),
             added_symbol = "",
             removed_symbol = "",

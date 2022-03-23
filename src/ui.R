@@ -64,7 +64,8 @@ body = dashboardBody(tabItems(
           width = 12
         ),
         box(
-          plotlyOutput("pf_plot"),
+          plotlyOutput("portfolio_position"),
+          # plotlyOutput("pf_plot"),
           title = "Portfolio evolution",
           status = "info",
           solidHeader = TRUE,

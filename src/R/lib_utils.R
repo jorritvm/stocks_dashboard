@@ -2,6 +2,36 @@
 # NEW
 ##########################
 
+standardize = function(x) {
+  return((x-min(x))/(max(x)-min(x)))
+}
+
+
+#' convert a window string to start & end dates
+#'
+#' @param window 
+#'
+#' @return
+#' @export
+window_to_start_end_dates = function(window) {
+  end = today()
+  if (window == "all") start = NULL
+  if (window == "5Y") start = today() - years(5)
+  if (window == "3Y") start = today() - years(3)
+  if (window == "2Y") start = today() - years(2)
+  if (window == "1Y") start = today() - years(1)
+  if (window == "6M") start = today() - months(6)
+  if (window == "3M") start = today() - months(3)
+  if (window == "1M") start = today() - months(1)
+  if (window == "2W") start = today() - weeks(2)
+  if (window == "1W") start = today() - weeks(1)
+  if (window == "YTD") start = ymd(paste0(year(today()), "-01-01"))
+  
+  result = named_list(start, end)
+  return(result)
+}
+
+
 #' LOCF where leading NA are filled out using FOCB
 #'
 #' @param x 
@@ -17,6 +47,7 @@ na.locf.cb = function(x) {
   z = na.locf(y, fromLast = TRUE)
   return(z)
 }
+
 
 #' LOCF where leading NA are replaced with 0
 #'
