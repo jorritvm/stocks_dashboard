@@ -1,5 +1,3 @@
-source("load_libraries.R")
-
 options(shiny.maxRequestSize = 30 * 1024 ^ 2) # 30 MB
 reactlog_enable()
 
