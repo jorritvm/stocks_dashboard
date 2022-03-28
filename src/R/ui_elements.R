@@ -56,3 +56,40 @@ box_explain_excel_upload = function() {
     width = 12
   )  
 }
+
+
+box_full_dark = function(...) {
+  box(
+    ...,
+    status = "primary",
+    solidHeader = TRUE,
+    width = 12
+  )
+}
+
+box_full_light = function(...) {
+  box(
+    ...,
+    status = "info",
+    solidHeader = TRUE,
+    width = 12
+  )
+}
+
+box_half_dark = function(...) {
+  box(
+    ...,
+    status = "primary",
+    solidHeader = TRUE,
+    width = 6
+  )
+}
+
+box_half_light = function(...) {
+  box(
+    ...,
+    status = "info",
+    solidHeader = TRUE,
+    width = 6
+  )
+}
