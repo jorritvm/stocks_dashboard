@@ -212,7 +212,7 @@ reset_ohlc = function() {
   for (symbol in symbols) { 
     # get OHLC
     start_date = today() - 10000
-    end_date = today()- 0
+    end_date = today()
     ohlc = get_ohlc_from_api(symbol, start_date, end_date)
     # sometimes the API fucks up and gives us duplicate symbol-date entries -> fix that here:
     ohlc = ohlc[, .SD[1], by = .(symbol, date)]
