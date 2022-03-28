@@ -5,8 +5,8 @@ sidebar = dashboardSidebar(
     menuItem("Portfolio", tabName = "portfolio"),
     menuItem("Currencies", tabName = "currencies"),
     menuItem("Stocks", tabName = "stocks"),
-    menuItem("About", tabName = "about")
-    # actionButton("debug_btn", label = "debug") # TODO: remove this at the end
+    menuItem("About", tabName = "about"),
+    actionButton("debug_btn", label = "debug") # TODO: remove this at the end
   )
 )
 
@@ -231,6 +231,7 @@ body = dashboardBody(tabItems(
   
 
   tabItem(tabName = "about",
+          DTOutput('table_debug'),
           img(src = "wsb.jpg"))
 ))
 

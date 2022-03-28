@@ -1,3 +1,24 @@
+#' returns amount of records in transactions table 
+#' 
+#' cheap function used to check if the datatable was changed and hook up to reactivePoll
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_count_transactions = function() {
+  # open the db connection
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+
+  n = dbGetQuery(con, "SELECT count(*) FROM transactions")[1,1]
+  
+  # close
+  dbDisconnect(con)  
+  
+  return(n)
+}
+
 #' read complete transactions table
 #'
 #' @return a data.table with structure:

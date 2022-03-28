@@ -7,6 +7,15 @@ server = function(input, output, session) {
     debug01()
   })
   
+  tr = reactivePoll(1000, 
+                    session,
+                    checkFunc = get_count_transactions,
+                    valueFunc = get_transactions
+  )
+  
+  output$table_debug = renderDT(tr(), options = list("pageLength" = 50))
+  
+  
   
   ### DEFINE REACTIVE DATASETS
   rv = reactiveValues(

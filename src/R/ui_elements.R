@@ -57,7 +57,7 @@ box_explain_excel_upload = function() {
   )  
 }
 
-
+# some predefined boxes
 box_full_dark = function(...) {
   box(
     ...,

@@ -1,5 +1,5 @@
 lapply(list.files(path = "R", recursive = FALSE, pattern = "\\.R$", full.names = TRUE), source)
-source("load_libraries.R")
+source("R/load_libraries.R")
 
 rv = list(  
   fx = get_latest_fx(),
