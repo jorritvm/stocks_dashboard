@@ -281,7 +281,8 @@ plot_benchmark = function(key,
                           bench,
                           window,
                           in_euro,
-                          ohlc) {
+                          ohlc,
+                          ohlc_euro) {
   
   # get symbols
   sym = key_to_symbol(key)
@@ -291,8 +292,9 @@ plot_benchmark = function(key,
   w = window_to_start_end_dates(window)
   
   # get ohlc data
-  dt_s = as.data.table(get_ohlc(ohlc, sym,   w$start, w$end))
-  dt_b = as.data.table(get_ohlc(ohlc, bench, w$start, w$end))
+  ohlc_choice = if(in_euro) { ohlc_euro } else { ohlc }
+  dt_s = as.data.table(get_ohlc(ohlc_choice, sym,   w$start, w$end))
+  dt_b = as.data.table(get_ohlc(ohlc_choice, bench, w$start, w$end))
   
   # keep only overlapping window
   start = min(dt_s$date, dt_b$date)
@@ -300,11 +302,11 @@ plot_benchmark = function(key,
   dt_b = dt_b[date >= start]
   
   # add relative positions
-  s_ref = dt_s[order(date)][1, adjusted]
-  b_ref = dt_b[order(date)][1, adjusted]
+  s_ref = dt_s[order(date)][1, close]
+  b_ref = dt_b[order(date)][1, close]
   
-  dt_s[, relative := round(((adjusted / s_ref)-1)*100, 3)]
-  dt_b[, relative := round(((adjusted / b_ref)-1)*100, 3)]
+  dt_s[, relative := round(((close / s_ref)-1)*100, 3)]
+  dt_b[, relative := round(((close / b_ref)-1)*100, 3)]
   
   # ggplot
   fig = ggplot(data = dt_b, 

@@ -327,7 +327,8 @@ server = function(input, output, session) {
                    input$bench_base,
                    input$bench_window,
                    input$bench_in_euro,
-                   ohlc())
+                   ohlc(),
+                   ohlc_euro())
   })
 
   # ################################
