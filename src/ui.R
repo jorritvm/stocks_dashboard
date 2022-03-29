@@ -3,7 +3,7 @@ header = dashboardHeader(title = "Stocks dashboard",
 
 sidebar = dashboardSidebar(
   sidebarMenu(
-    menuItem("Portfolio", tabName = "portfolio", icon = icon("pie-chart")),
+    # menuItem("Portfolio", tabName = "portfolio"icon = icon("money-check-dollar-pen")),
     menuItem("Currencies", tabName = "currencies", icon = icon("coins")),
     menuItem("Stocks", tabName = "stocks", icon = icon("bar-chart-o")),
     menuItem("About", tabName = "about", icon = icon("info")),
@@ -188,10 +188,6 @@ body = dashboardBody(tabItems(
         ),
         box_full_dark(
           actionButton("update_ohlc_btn", "Update OHLC data", icon("sync")),
-          title = "Action"
-        ),
-        box_full_dark(
-          actionButton("reset_ohlc_btn", "Reset all OHLC data - CAREFULL!!!", icon("trash")),
           title = "Action"
         )
       )
