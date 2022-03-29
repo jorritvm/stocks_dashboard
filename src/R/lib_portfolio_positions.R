@@ -78,6 +78,34 @@ get_stock_position_over_time_per_stock_and_broker = function(tr,
 }
 
 
+#' calculate data linked to market timing for a certain stock
+#'
+#' @param timing_key key for stock "symbol | company"
+#' @param timing_window window for plot
+#' @param tr transactions table
+#'
+#' @return a data.table with structure:
+#'         - symbol: character
+#'         - date: Date
+#'         - price: numeric
+#'         - amount_holding: numeric
+#'         - position_euro: numeric
+#' @export
+get_one_stock_evolution = function(timing_key, 
+                                   timing_window, 
+                                   pos_sb_evol) {
+  
+  timing_symbol = key_to_symbol(timing_key)
+  w = window_to_start_end_dates(timing_window)
+  
+  pos_sb_evol_subset = pos_sb_evol[symbol == timing_symbol & date >= w$start & date <= w$end,
+                                   .(amount_holding = sum(amount_holding), position_euro = sum(position_euro)),
+                                   by = .(symbol, date, price)]
+  
+  return(pos_sb_evol_subset)
+}
+
+
 #' returns the current nonzero positions (using latest close) per stock and per broker
 #'
 #' @param tr transactions data table
@@ -227,143 +255,4 @@ get_current_position_per_stock = function(pos_sb, profiles) {
 
 
 
-#' calculate data linked to market timing for a certain stock
-#'
-#' @param timing_key key for stock "symbol | company"
-#' @param timing_window window for plot
-#' @param tr transactions table
-#'
-#' @return a data.table with structure:
-#'         - date: Date
-#'         - position: numeric
-#'         - close: numeric
-#'         - value: numeric
-#'         - holding: numeric
-#' @export
-calculate_market_timing = function(timing_key, timing_window, tr) {
-  timing_symbol = key_to_symbol(timing_key)
-  w = window_to_start_end_dates(timing_window)
-  
-  # prepare & filter tr
-  trs = copy(tr)
-  trs = trs[type == "sell", amount := amount * -1]
-  trs = trs[type == "transfer_out", amount := amount * -1]
-  trs = trs[type != "div" & symbol == timing_symbol]
-  
-  # get one amount per day
-  trs = trs[,
-            .(amount = sum(amount)),
-            by = date][amount != 0]
-  
-  # get the position from the transactions
-  trs[, position := cumsum(amount)]
-  trs[, amount := NULL]
-  
-  # filter window
-  trs = rbind(trs, 
-              data.table(date = c(w$start, w$end), position = c(NA,NA)))
-  trs = trs[order(date)]
-  trs[, position := na.locf.0b(position)]
-  trsub = trs[date >= w$start & date <= w$end]
-  
-  # pad and add close value
-  trsub = pad(trsub, interval = "day")
-  trsub[, position := na.locf.0b(position)]
-  ohlc = as.data.table(get_ohlc(timing_symbol, w$start, w$end))
-  trsub = merge(trsub,
-                ohlc[, .(date, close)],
-                by = "date",
-                all.x = TRUE)
-  
-  # missing weekend ohlc -> LOCF and also fix leading NA
-  trsub[, close := na.locf.cb(close)]
-  
-  #valuate
-  trsub[, value := close * position]
-  trsub[, holding := (position != 0) * close]
-  
-  # add symbol
-  trsub[, symbol := timing_symbol]
-  
-  return(trsub)
-}
 
-#' create a plot that shows price evolution of a stock and colors the region where you are holding that stock
-#'
-#' @param trsub 
-#' @param profiles 
-#'
-#' @return
-#' @export
-plot_market_timing_p = function(trsub, profiles) {
-  s = trsub[1, symbol]
-  profile = profiles[symbol == s]
-  
-  start = min(trsub$date)
-  end = max(trsub$date)
-  # plot 
-  p = 
-    ggplot(data = trsub,
-           aes(x = date)) + 
-    geom_area(aes(y = holding,  fill = as.factor(position))) +
-    geom_line(aes(y = close)) +
-    scale_fill_brewer(palette="Greens") + 
-    scale_x_date(
-      limits = c(start, end),
-      expand = c(0,0)) +
-    labs(y = paste0("Stock value [", profile$currency, "]")) + 
-    theme(legend.position = "none")
-  
-  return(p)
-}
-
-#' create a plot that show how many units of a stock you are holding over time
-#'
-#' @param trsub 
-#'
-#' @return
-#' @export
-plot_market_timing_q = function(trsub) {
-  start = min(trsub$date)
-  end = max(trsub$date)
-  # plot 
-  p = 
-    ggplot(data = trsub,
-           aes(x = date)) + 
-    geom_line(aes(y = position)) +
-    scale_x_date(
-      limits = c(start, end),
-      expand = c(0,0)) +
-    labs(y = "Position holding [#]") + 
-    theme(legend.position = "none")
-  
-  return(p)
-}
-
-
-#' create a plot that shows how much value of a stock you are holding over time
-#'
-#' @param trsub 
-#' @param profiles 
-#'
-#' @return
-#' @export
-plot_market_timing_v = function(trsub, profiles) {
-  s = trsub[1, symbol]
-  profile = profiles[symbol == s]
-  
-  start = min(trsub$date)
-  end = max(trsub$date)
-  # plot 
-  p = 
-    ggplot(data = trsub,
-           aes(x = date)) + 
-    geom_line(aes(y = value)) +
-    scale_x_date(
-      limits = c(start, end),
-      expand = c(0,0)) +
-    labs(y =  paste0("Value holding [", profile$currency, "]")) +
-    theme(legend.position = "none")
-  
-  return(p)
-}

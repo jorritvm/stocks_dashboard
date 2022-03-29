@@ -56,9 +56,9 @@ body = dashboardBody(tabItems(
           title = "Input"
         ),
         box_full_light(
-          plotOutput("market_timing_p"),
-          plotOutput("market_timing_q"),
-          plotOutput("market_timing_v"),
+          plotlyOutput("market_timing_p"),
+          plotlyOutput("market_timing_q"),
+          plotlyOutput("market_timing_pq"),
           title = "Market timing"
         )
       ),

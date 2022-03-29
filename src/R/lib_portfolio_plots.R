@@ -65,7 +65,103 @@ plot_portfolio_evolution = function(broker,
                aes(x=date, y=portfolio)) + 
        geom_line() + 
        labs(y = "Portfolio [EUR]") +     
-       scale_x_date(limits = c(w$start, w$end), expand = c(0,0)) 
+       scale_x_date(limits = c(w$start, w$end), 
+                    expand = c(0,0),
+                    date_breaks  = "1 month") +
+       theme(axis.text.x = element_text(angle = 90))
   )
+  return(p)
+}
+
+
+#' create a plot that shows price evolution of a stock and colors the region where you are holding that stock
+#'
+#' @param pos_sb_evol_subset 
+#'
+#' @return
+#' @export
+plot_market_timing_p = function(pos_sb_evol_subset) {
+  s = pos_sb_evol_subset[1, symbol]
+
+  start = min(pos_sb_evol_subset$date)
+  end   = max(pos_sb_evol_subset$date)
+  # plot 
+  p = 
+    ggplotly(
+      ggplot(data = pos_sb_evol_subset,
+           aes(x = date)) + 
+      geom_col(aes(y = price,  fill = amount_holding), width = 1) +
+      scale_fill_gradient(low = "white", high = "darkgreen", limits = c(0,NA)) +
+      geom_line(aes(y = price), size = 1) +
+      scale_x_date(
+        limits = c(start, end),
+        expand = c(0,0),
+        date_breaks  = "1 month") +
+      labs(y = paste0("Stock value [EUR]")) + 
+      theme(legend.position = "none") + 
+      theme(axis.text.x = element_text(angle = 90))
+    )
+  return(p)
+}
+
+
+#' create a plot that show how many units of a stock you are holding over time
+#'
+#' @param pos_sb_evol_subset 
+#'
+#' @return
+#' @export
+plot_market_timing_q = function(pos_sb_evol_subset) {
+  start = min(pos_sb_evol_subset$date)
+  end = max(pos_sb_evol_subset$date)
+  
+  # plot 
+  p = 
+    ggplotly(
+      ggplot(data = pos_sb_evol_subset,
+             aes(x = date)) + 
+      geom_col(aes(y = amount_holding,  fill = amount_holding), width = 1) +
+      scale_fill_gradient(low = "white", high = "darkgreen", limits = c(0,NA)) +
+      geom_line(aes(y = amount_holding), size = 1) +
+      scale_x_date(
+        limits = c(start, end),
+        expand = c(0,0),
+        date_breaks  = "1 month") +
+      labs(y = "Position holding [#]") + 
+      theme(legend.position = "none") + 
+      theme(axis.text.x = element_text(angle = 90))
+    )
+  
+  return(p)
+}
+
+
+#' create a plot that shows how much value of a stock you are holding over time
+#'
+#' @param pos_sb_evol_subset 
+#'
+#' @return
+#' @export
+plot_market_timing_pq = function(pos_sb_evol_subset) {
+  s = pos_sb_evol_subset[1, symbol]
+
+  start = min(pos_sb_evol_subset$date)
+  end = max(pos_sb_evol_subset$date)
+  # plot 
+  p = 
+    ggplotly(
+      ggplot(data = pos_sb_evol_subset,
+             aes(x = date)) + 
+      geom_col(aes(y = position_euro,  fill = amount_holding), width = 1) +
+      scale_fill_gradient(low = "white", high = "darkgreen", limits = c(0,NA)) +
+      geom_line(aes(y = position_euro), size = 1) +
+      scale_x_date(
+        limits = c(start, end),
+        expand = c(0,0),
+        date_breaks  = "1 month") +
+      labs(y =  paste0("Value holding [EUR]")) +
+      theme(legend.position = "none") + 
+      theme(axis.text.x = element_text(angle = 90))
+    )
   return(p)
 }

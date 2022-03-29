@@ -89,38 +89,39 @@ server = function(input, output, session) {
   })
   
   
-  # 
   # ################################
   # ### PAGE: performance
   # output$total_performance = NULL
-  # 
-  # ################################
-  # ### PAGE: market timing
-  # observeEvent(input$timing_key, { rv$focus_stock = input$timing_key })
-  # observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "timing_key", selected = rv$focus_stock) })
-  # 
-  # observe({
-  #   updateSelectInput(session,
-  #                     "timing_key",
-  #                     label = NULL,
-  #                     choices = rv$profiles$key)
-  # })
-  # 
-  # trsub = reactive({
-  #   calculate_market_timing(input$timing_key,
-  #                           input$timing_window,
-  #                           rv$tr)
-  # })
-  # 
-  # output$market_timing_p = renderPlot(plot_market_timing_p(trsub(), rv$profiles))
-  # output$market_timing_q = renderPlot(plot_market_timing_q(trsub()))
-  # output$market_timing_v = renderPlot(plot_market_timing_v(trsub(), rv$profiles))
-  # 
-  # ################################
-  # ### PAGE: list all transactions
-  # output$transactions_table = renderDT(rv$tr, options = list("pageLength" = 50))
-  # 
-  # 
+  
+  
+  ################################
+  ### PAGE: market timing
+  observeEvent(input$timing_key, { rv$focus_stock = input$timing_key })
+  observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "timing_key", selected = rv$focus_stock) })
+
+  observe({
+    updateSelectInput(session,
+                      "timing_key",
+                      label = NULL,
+                      choices = profiles()$key)
+  })
+
+  pos_sb_evol_subset = reactive({
+    get_one_stock_evolution(input$timing_key,
+                            input$timing_window,
+                            pos_sb_evol())
+  })
+
+  output$market_timing_p  = renderPlotly(plot_market_timing_p(pos_sb_evol_subset()))
+  output$market_timing_q  = renderPlotly(plot_market_timing_q(pos_sb_evol_subset()))
+  output$market_timing_pq = renderPlotly(plot_market_timing_pq(pos_sb_evol_subset()))
+
+  
+  ################################
+  ### PAGE: list all transactions
+  output$transactions_table = renderDT(tr(), options = list("pageLength" = 50))
+
+
   # ################################
   # ### PAGE: batch upload transactions
   # # handle file upload
