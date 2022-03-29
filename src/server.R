@@ -36,14 +36,7 @@ server = function(input, output, session) {
     return(id)
   }
   
-  ### REACTIVES
-
-  
-  portfolio_positions = reactive({
-    expand_transactions_to_portfolio_positions(tr())
-  })
-  
-  # ### REACTIVE values
+  ### REACTIVE values
   rv = reactiveValues(
     msgs = list(),
     focus_stock = ""
@@ -58,10 +51,15 @@ server = function(input, output, session) {
                     checkFunc = get_count_transactions,
                     valueFunc = get_transactions)
   
-  
-  pos_sb = reactive({ 
-    get_current_position_per_stock_and_broker(tr(), ohlc())
+  pos_sb_evol = reactive({
+    get_stock_position_over_time_per_stock_and_broker(tr(), 
+                                                      ohlc_euro())
   })
+
+  pos_sb = reactive({ 
+    get_current_position_per_stock_and_broker(pos_sb_evol())
+  })
+  
   
   ################################
   ### PAGE: portfolio positions
@@ -85,7 +83,9 @@ server = function(input, output, session) {
   })
 
   output$portfolio_position = renderPlotly({
-    plot_portfolio_evolution(input$pf_broker, input$pf_window, portfolio_positions() )
+    plot_portfolio_evolution(input$pf_broker, 
+                             input$pf_window, 
+                             portfolio_positions() )
   })
   
   

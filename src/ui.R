@@ -21,11 +21,11 @@ body = dashboardBody(tabItems(
         "Position",
         box_full_light(
           plotlyOutput("position_per_broker"),
-          title = "Position per account"
+          title = "Position per account [EUR]"
         ),
         box_full_light(
           plotlyOutput("position_per_stock"),
-          title = "Position per stock"
+          title = "Position per stock [EUR]"
         )
       ),
       tabPanel(

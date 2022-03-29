@@ -6,7 +6,7 @@
 #' @export
 plot_position_per_broker = function(pos_b) {
   pos_b = pos_b[order(account)]
-  fig = plot_ly(x = round(pos_b$portfolio,0), 
+  fig = plot_ly(x = round(pos_b$position_euro,0), 
                 y = pos_b$account, 
                 type = 'bar', 
                 orientation = 'h') %>% 
@@ -25,7 +25,7 @@ plot_position_per_broker = function(pos_b) {
 #' @export
 plot_position_per_stock = function(pos_s) {
   pos_s = pos_s[order(symbol)]
-  fig = plot_ly(x = round(pos_s$portfolio,0), 
+  fig = plot_ly(x = round(pos_s$position_euro,0), 
                 y = pos_s$key, 
                 type = 'bar', 
                 orientation = 'h') %>% 

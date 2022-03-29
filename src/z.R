@@ -11,6 +11,6 @@ fx = get_all_fx()
 
 ohlc_euro =  convert_ohlc_to_euro(ohlc, profiles, fx)
 
-pos_sb = get_current_position_per_stock_and_broker(tr, ohlc)
 
-portfolio_positions = expand_transactions_to_portfolio_positions(tr)
+pos_sb_evol = get_stock_position_over_time_per_stock_and_broker(tr, ohlc_euro)
+pos_sb = get_current_position_per_stock_and_broker(pos_sb_evol)
