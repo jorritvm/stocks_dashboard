@@ -3,6 +3,7 @@ header = dashboardHeader(title = "Stocks dashboard",
 
 sidebar = dashboardSidebar(
   sidebarMenu(
+    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
     menuItem("Portfolio", tabName = "portfolio", icon = icon("pie-chart")),
     menuItem("Currencies", tabName = "currencies", icon = icon("coins")),
     menuItem("Stocks", tabName = "stocks", icon = icon("bar-chart-o")),
@@ -13,7 +14,22 @@ sidebar = dashboardSidebar(
 
 body = dashboardBody(tabItems(
 
-    tabItem(
+  tabItem(
+    tabName = "dashboard",
+    valueBox(123, "Total stocks", icon = icon("euro"), color = "aqua", width = 6),
+    valueBox(456, "Total cash", icon = icon("euro"), color = "aqua", width = 6),
+    valueBox(123, "Overall performance", icon = icon("sort"), color = "aqua", width = 6),
+    valueBox(456, "YTD performance", icon = icon("sort"), color = "aqua", width = 6),
+    valueBox(123, "Best stock overall", icon = icon("sort"), color = "aqua", width = 6),
+    valueBox(456, "Worst stock overall", icon = icon("sort"), color = "aqua", width = 6),
+    valueBox(123, "Best stock YTD", icon = icon("sort"), color = "aqua", width = 6),
+    valueBox(456, "Worst stock YTD", icon = icon("sort"), color = "aqua", width = 6),
+    valueBox(789, "Latest OHLC update", icon = icon("refresh"), color = "aqua", width = 6),
+    valueBox(789, "Latest FX update", icon = icon("refresh"), color = "aqua", width = 6),
+  ),
+  
+  
+  tabItem(
     tabName = "portfolio",
     navbarPage(
       title = "",
@@ -196,7 +212,6 @@ body = dashboardBody(tabItems(
   
 
   tabItem(tabName = "about",
-          DTOutput('table_debug'),
           img(src = "wsb.jpg"))
 ))
 
