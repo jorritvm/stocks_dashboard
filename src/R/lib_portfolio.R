@@ -195,14 +195,14 @@ plot_portfolio_evolution = function(broker, pf_window, portfolio_positions) {
 
 #' creates a plot for actual portfolio position per broker
 #'
-#' @param trpb 
+#' @param pos_b 
 #'
 #' @return
 #' @export
-plot_position_per_broker = function(trpb) {
-  trpb = trpb[order(account)]
-  fig = plot_ly(x = round(trpb$portfolio,0), 
-                y = trpb$account, 
+plot_position_per_broker = function(pos_b) {
+  pos_b = pos_b[order(account)]
+  fig = plot_ly(x = round(pos_b$portfolio,0), 
+                y = pos_b$account, 
                 type = 'bar', 
                 orientation = 'h') %>% 
     layout(yaxis = list(autorange="reversed"))
@@ -214,14 +214,14 @@ plot_position_per_broker = function(trpb) {
 
 #' creates a plot for actual portfolio position per stock (irrespective of broker)
 #'
-#' @param trps 
+#' @param pos_s 
 #'
 #' @return
 #' @export
-plot_position_per_stock = function(trps) {
-  trps = trps[order(symbol)]
-  fig = plot_ly(x = round(trps$portfolio,0), 
-                y = trps$key, 
+plot_position_per_stock = function(pos_s) {
+  pos_s = pos_s[order(symbol)]
+  fig = plot_ly(x = round(pos_s$portfolio,0), 
+                y = pos_s$key, 
                 type = 'bar', 
                 orientation = 'h') %>% 
     layout(yaxis = list(autorange="reversed"))

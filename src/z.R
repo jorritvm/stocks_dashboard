@@ -10,4 +10,7 @@ ohlc =  get_all_ohlc()
 fx = get_all_fx()
 
 ohlc_euro =  convert_ohlc_to_euro(ohlc, profiles, fx)
+
+pos_sb = get_current_position_per_stock_and_broker(tr, ohlc)
+
 portfolio_positions = expand_transactions_to_portfolio_positions(tr)

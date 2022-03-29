@@ -37,11 +37,6 @@ server = function(input, output, session) {
   }
   
   ### REACTIVES
-  tr = reactivePoll(1000,
-                    session,
-                    checkFunc = get_count_transactions,
-                    valueFunc = get_transactions)
-
 
   
   portfolio_positions = reactive({
@@ -55,23 +50,32 @@ server = function(input, output, session) {
   )
 
   
-# ################################################################
-# # PORTFOLIO TAB
-# ################################################################
-  # ################################
-  # ### PAGE: portfolio positions
-  # output$position_per_broker = renderPlotly({
-  #   trp = get_current_position_per_stock_and_broker(rv$tr)
-  #   trpb = get_current_position_per_broker(trp)
-  #   plot_position_per_broker(trpb)
-  # })
-  # 
-  # output$position_per_stock = renderPlotly({
-  #   trp = get_current_position_per_stock_and_broker(rv$tr)
-  #   trps = get_current_position_per_stock(trp, rv$profiles)
-  #   plot_position_per_stock(trps)
-  # })
-  # 
+################################################################
+# PORTFOLIO TAB
+################################################################
+  tr = reactivePoll(1000,
+                    session,
+                    checkFunc = get_count_transactions,
+                    valueFunc = get_transactions)
+  
+  
+  pos_sb = reactive({ 
+    get_current_position_per_stock_and_broker(tr(), ohlc())
+  })
+  
+  ################################
+  ### PAGE: portfolio positions
+  output$position_per_broker = renderPlotly({
+    
+    pos_b = get_current_position_per_broker(pos_sb())
+    plot_position_per_broker(pos_b)
+  })
+
+  output$position_per_stock = renderPlotly({
+    pos_s = get_current_position_per_stock(pos_sb(), profiles())
+    plot_position_per_stock(pos_s)
+  })
+
   # ##############################################################p
   # ### PAGE: plot
   # observeEvent(rv$tr, { updateSelectInput(session = session, inputId = "pf_broker", choices = c("All", unique(rv$tr$account))) })

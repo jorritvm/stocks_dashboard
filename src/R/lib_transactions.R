@@ -98,26 +98,39 @@ check_for_transaction_file_type = function(dt) {
 #'         - price_adj: numeric
 #'         - latest_value: numeric
 #' @export
-get_current_position_per_stock_and_broker = function(tr) {
-  trp = copy(tr)
+get_current_position_per_stock_and_broker = function(tr, ohlc) {
+  pos_sb = copy(tr)
   
   # correct signs
-  trp = trp[type == "sell", amount := amount * -1]
-  trp = trp[type == "transfer_out", amount := amount * -1]
+  pos_sb = pos_sb[type == "sell", amount := amount * -1]
+  pos_sb = pos_sb[type == "transfer_out", amount := amount * -1]
   
   # aggregate transactions to current position
-  trp = trp[type != "div" & !type %like% "cash", 
+  pos_sb = pos_sb[type != "div" & !type %like% "cash", 
             .(amount = sum(amount)), 
             by = .(symbol, account)][amount != 0]
   
   # add latest evaluation
-  trp = trp %>% 
-    left_join(get_latest_close(), by = "symbol") %>% 
+  pos_sb = pos_sb %>% 
+    left_join(get_latest_close(ohlc), by = "symbol") %>% 
     copy()
-  trp[, latest_value := amount * price_adj]
-  trp[, latest_close := NULL][]
+  pos_sb[, latest_value := amount * close]
   
-  return(trp)
+  return(pos_sb)
+}
+
+
+#' returns an aggregate actual position per broker
+#'
+#' @param pos_sb output from get_current_position_per_stock_and_broker
+#'
+#' @return a data.table with structure:
+#'         - account: character
+#'         - portfolio: numeric
+#' @export
+get_current_position_per_broker = function(pos_sb) {
+  result = pos_sb[, .(portfolio = sum(latest_value)), by = .(account)]
+  return(result)
 }
 
 
@@ -131,26 +144,14 @@ get_current_position_per_stock_and_broker = function(tr) {
 #'         - company_name: character
 #'         - key: character
 #' @export
-get_current_position_per_stock = function(trp, profiles) {
-  trps = trp %>% 
+get_current_position_per_stock = function(pos_sb, profiles) {
+  pos_s = pos_sb %>% 
     group_by(symbol) %>% 
     summarise(portfolio = sum(latest_value)) %>%
     left_join(profiles[, c("symbol", "company_name", "key")], by = "symbol") %>% 
     as.data.table()
                                       
-  return(trps)
+  return(pos_s)
 }
 
 
-#' returns an aggregate actual position per broker
-#'
-#' @param trp output from get_current_position_per_stock_and_broker
-#'
-#' @return a data.table with structure:
-#'         - account: character
-#'         - portfolio: numeric
-#' @export
-get_current_position_per_broker = function(trp) {
-  result = trp[, .(portfolio = sum(latest_value)), by = .(account)]
-  return(result)
-}
