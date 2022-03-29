@@ -8,23 +8,35 @@ server = function(input, output, session) {
     # debug01()
     notify("test 123",5)
   })
+  output$table_debug = renderDT(portfolio_positions(), options = list("pageLength" = 50))
+  # end debug
+  
+################################################################
+# general
+################################################################
+  ### NOTIFICATIONS
+  output$notif_menu <- renderMenu({
+    dropdownMenu(type = "notifications", icon = icon("info"), .list = rv$msgs)
+  })
   
   notify = function(txt, duration = NULL) {
-    fulltext = paste(tstamp(" ","-",":"), txt) 
+    # fulltext = paste(tstamp(" ","-",":"), txt) 
+    fulltext = paste0("[", strftime(Sys.time(), "%H:%M"), "] ", txt)
     
     # dropdown menu
-    rv$msgs = c(list(notificationItem(fulltext, icon = icon("info"), status = "info", href = NULL)),
-                rv$msgs)  
+    rv$msgs = c(list(notificationItem(
+                        text = fulltext, # using tags$div() there is a possibility to add style here later for word wrap 
+                        icon = icon("info"),
+                        status = "info",
+                        href = NULL)),
+                rv$msgs)
     # corner popup
     id = showNotification(fulltext, duration = duration, closeButton = FALSE, type = "message")
     
     return(id)
   }
   
-  output$table_debug = renderDT(portfolio_positions(), options = list("pageLength" = 50))
-  # end debug
-  
-  ### DEFINE REACTIVES
+  ### REACTIVES
   tr = reactivePoll(1000,
                     session,
                     checkFunc = get_count_transactions,
@@ -38,16 +50,13 @@ server = function(input, output, session) {
                       checkFunc = get_count_ohlc,
                       valueFunc = get_all_ohlc)
   
-  fx = reactivePoll(1000,
-                    session,
-                    checkFunc = get_count_fx,
-                    valueFunc = get_all_fx)
+
   
   portfolio_positions = reactive({
     expand_transactions_to_portfolio_positions(tr())
   })
   
-  # ### DEFINE REACTIVE values
+  # ### REACTIVE values
   rv = reactiveValues(
     msgs = list()
     # fx = get_latest_fx(),
@@ -62,15 +71,9 @@ server = function(input, output, session) {
   )
 
   
-  ### DEFINE NOTIFICATIONS
-  output$notif_menu <- renderMenu({
-    dropdownMenu(type = "notifications", icon = icon("info"), .list = rv$msgs)
-  })
-
-  
-  # ################################################################
-  # # PORTFOLIO TAB
-  # ################################################################
+# ################################################################
+# # PORTFOLIO TAB
+# ################################################################
   # ################################
   # ### PAGE: portfolio positions
   # output$position_per_broker = renderPlotly({
@@ -160,20 +163,22 @@ server = function(input, output, session) {
 ################################################################
 # CURRENCIES
 ################################################################
-  ################################
-  ### PAGE: LIST ALL FX
-  # update table
-  output$fx_list = renderDT(fx(), options = list("pageLength" = 50))
+  fx = reactivePoll(1000,
+                    session,
+                    checkFunc = get_count_fx,
+                    valueFunc = get_all_fx)
+  
+  unique_fx_symbols = reactive({ unique(fx()[['fx']]) })
   
   
   ################################
-  ### PAGE: PLOT FX
+  ### PAGE: CHART FX
   # update input list
   observeEvent(fx(), {
     updateSelectInput(session,
                       "fx_symbol",
                       label = NULL,
-                      choices = unique(fx()[['fx']]))
+                      choices = unique_fx_symbols())
   })
   
   # update plot
@@ -185,83 +190,67 @@ server = function(input, output, session) {
   
   
   ################################
-  ### PAGE: ADD AN FX TO THE DB
-  # add to DB
+  ### PAGE: TABLE FX
+  # update table
+  output$fx_list = renderDT(fx(), options = list("pageLength" = 50))
+  
+  
+  ################################
+  ### PAGE: EDIT FX
+  # add fx to DB
   observeEvent(input$add_fx_btn, {
     add_fx = input$add_fx_symbol
 
-    # get FX
+    # get FX (modifying the DB is a side-effect)
     start_date = today() - years(10) # attention - oanda only provides 180 days!!!
     dt_fx = get_fx_from_api(add_fx, start_date)
     safe_write_fx_data(dt_fx)
 
-    # update status reactive value
-    rv$added_fx = add_fx
+    # update status (setting an RV is a side-effect)
+    txt = paste("FX", add_fx, "added to the DB.")
+    notify(txt, 10)
   })
 
-  # update status text
-  output$add_fx_output = renderText({
-    req(rv$added_fx)
-    paste("FX", rv$added_fx, "added to the DB.")
+  # remove fx from DB
+  observeEvent(unique_fx_symbols(), {
+    updateSelectInput(session,
+                      "remove_fx_symbol",
+                      label = NULL,
+                      choices = unique_fx_symbols())
   })
-  # 
-  # ################################
-  # ### PAGE: REMOVE AN FX FROM THE DB
-  # # update input list
-  # observe({
-  #   updateSelectInput(session,
-  #                     "remove_fx_symbol",
-  #                     label = NULL,
-  #                     choices = sort(rv$fx$fx))
-  # })
-  # 
-  # # remove from db
-  # observeEvent(input$remove_fx_btn, {
-  #   fx_to_remove = input$remove_fx_symbol
-  #   
-  #   # remove it from db
-  #   remove_fx_from_db(fx_to_remove)
-  #   
-  #   # update fx list
-  #   rv$fx = get_latest_fx()
-  #   
-  #   # update status reactive value
-  #   rv$removed_fx = fx_to_remove
-  # })
-  # 
-  # # update status text
-  # output$remove_fx_output = renderText({
-  #   req(rv$removed_fx)
-  #   paste(tstamp(" ","-",":"), "FX", rv$removed_fx, "deleted from the DB.")
-  # })
-  # 
-  # ################################
-  # ### PAGE: update FX
-  # # update status text
-  # # start_fx_text <- eventReactive(input$update_fx_btn, {
-  # #   "hallo" #paste(tstamp(" ","-",":"), "Started updating all FX")
-  # #   print("eventreactive!!!!!!")
-  # # })
-  # # 
-  # # update db
-  # observeEvent(input$update_fx_btn, {
-  #   notif = paste(tstamp(" ","-",":"), "Updating all FX") # this does not work
-  #   id <- showNotification(notif, duration = NULL, closeButton = FALSE, type = "message")
-  #   on.exit(removeNotification(id), add = TRUE)
-  #   
-  #   update_all_fx()
-  #   rv$updated_fx = paste(tstamp(" ","-",":"), "FX data updated for all currencies in the DB.")
-  # })
-  # 
-  # 
-  # # output$update_fx_text = renderText({
-  # #   start_fx_text()
-  # # })
-  # 
+ 
+  observeEvent(input$remove_fx_btn, {
+    remove_fx = input$remove_fx_symbol
+
+    # remove it from db (side effect)
+    remove_fx_from_db(remove_fx)
+
+    # update status (setting an RV is a side-effect)
+    txt = paste("FX", remove_fx, "deleted from the DB.")
+    notify(txt, 10)
+  })
+
+  observeEvent(input$update_fx_btn, {
+    # inform user that we are starting batch update
+    id = notify("Updating all FX")
+    on.exit(removeNotification(id), add = TRUE)
+
+    # batch update the fx data
+    update_all_fx(fx())
+    
+    # inform user that we have finished the batch update
+    notify("FX data updated for all currencies in the DB.", 10)
+  })
+
+
   # output$update_fx_text = renderText({
-  #   req(rv$updated_fx)
-  #   rv$updated_fx
+  #   start_fx_text()
   # })
+
+  output$update_fx_text = renderText({
+    req(rv$updated_fx)
+    rv$updated_fx
+  })
   # 
   # ################################################################
   # # STOCKS TAB
