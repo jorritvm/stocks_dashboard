@@ -1,3 +1,15 @@
+#' returns amount of records in stock_profiles table 
+#' 
+#' cheap function used to check if the datatable was changed and hook up to reactivePoll
+#'
+#' @return
+#' @export
+get_count_profiles = function() {
+  n = get_count_table("stock_profiles")
+  return(n)
+}
+
+
 #' read the stock profiles table in its entirety
 #'
 #' @return a data.table where each line documents a stock with structure:
@@ -31,7 +43,6 @@ get_stock_profiles = function() {
   
   return(result)
 }
-
 
 #' returns a key-value (2 column) table with profile information on a stock
 #'
@@ -78,6 +89,98 @@ get_stock_key_info = function(profiles) {
   
   return(result)
 }
+
+
+#' returns amount of records in stock_ohlc table 
+#' 
+#' cheap function used to check if the datatable was changed and hook up to reactivePoll
+#'
+#' @return
+#' @export
+get_count_ohlc = function() {
+  n = get_count_table("stock_ohlc")
+  return(n)
+}
+
+
+#' read entire OHLC table and return data.table
+#'
+#' @return a data.table containing OHLC data for all symbols with structure:
+#'         - symbol: character
+#'         - date: Date
+#'         - open: numeric
+#'         - high: numeric
+#'         - low: numeric
+#'         - close: numeric
+#'         - volume: numeric
+#'         - adjusted: numeric
+#' @export
+get_all_ohlc = function() {
+  # open the db connection
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  
+  # use some dplyr for the select query
+  result = tbl(con, "stock_ohlc") %>%
+    as.data.table()
+  result = result %>%
+    mutate(date = ymd(date))
+  
+  # close
+  dbDisconnect(con)  
+  
+  return(result)
+}
+
+
+#' returns OHLC data for the requested symbol(s) from the DB
+#'
+#' @param sym single symbol string or vector of multiple symbols
+#' @param start_date 
+#' @param end_date 
+#'
+#' @return a data.table containing OHLC data for one or multiple symbols with structure:
+#'         - symbol: character
+#'         - date: Date
+#'         - open: numeric
+#'         - high: numeric
+#'         - low: numeric
+#'         - close: numeric
+#'         - volume: numeric
+#'         - adjusted: numeric
+#' @export
+get_ohlc = function(sym, start_date = NULL, end_date = NULL) {
+  # open the db connection
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  
+  # use some dplyr for the select query
+  result = tbl(con, "stock_ohlc") %>%
+    filter(symbol %in% sym) %>%
+    as.data.table()
+  result = result %>%
+    mutate(date = ymd(date))
+  
+  if (!is.null(start_date)) {
+    result = result %>% 
+      filter(date >= start_date)
+  }
+  if (!is.null(end_date)) {
+    result = result %>% 
+      filter(date <= end_date)
+  } 
+  
+  # close
+  dbDisconnect(con)  
+  
+  return(result)
+}
+
+
+
+
+
+
 
 
 #' add a stock to the DB by adding profile & ohlc data
@@ -134,78 +237,6 @@ safe_write_stock_profile = function(profile) {
   dbDisconnect(con)  
 }
 
-#' returns OHLC data for the requested symbol(s) from the DB
-#'
-#' @param sym single symbol string or vector of multiple symbols
-#' @param start_date 
-#' @param end_date 
-#'
-#' @return a data.table containing OHLC data for one or multiple symbols with structure:
-#'         - symbol: character
-#'         - date: Date
-#'         - open: numeric
-#'         - high: numeric
-#'         - low: numeric
-#'         - close: numeric
-#'         - volume: numeric
-#'         - adjusted: numeric
-#' @export
-get_ohlc = function(sym, start_date = NULL, end_date = NULL) {
-  # open the db connection
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  
-  # use some dplyr for the select query
-  result = tbl(con, "stock_ohlc") %>%
-    filter(symbol %in% sym) %>%
-    as.data.table()
-  result = result %>%
-    mutate(date = ymd(date))
-
-  if (!is.null(start_date)) {
-    result = result %>% 
-      filter(date >= start_date)
-  }
-  if (!is.null(end_date)) {
-    result = result %>% 
-      filter(date <= end_date)
-  } 
-  
-  # close
-  dbDisconnect(con)  
-  
-  return(result)
-}
-
-
-#' read entire OHLC table and return data.table
-#'
-#' @return a data.table containing OHLC data for all symbols with structure:
-#'         - symbol: character
-#'         - date: Date
-#'         - open: numeric
-#'         - high: numeric
-#'         - low: numeric
-#'         - close: numeric
-#'         - volume: numeric
-#'         - adjusted: numeric
-#' @export
-get_all_ohlc = function() {
-  # open the db connection
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  
-  # use some dplyr for the select query
-  result = tbl(con, "stock_ohlc") %>%
-      as.data.table()
-  result = result %>%
-    mutate(date = ymd(date))
-  
-  # close
-  dbDisconnect(con)  
-  
-  return(result)
-}
 
 
 #' safely write a stock OHLC data to the DB

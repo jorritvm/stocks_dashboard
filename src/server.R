@@ -7,14 +7,25 @@ server = function(input, output, session) {
     debug01()
   })
   
+  # reactive sql tables
   tr = reactivePoll(1000, 
                     session,
                     checkFunc = get_count_transactions,
                     valueFunc = get_transactions
   )
+  ohlc = reactivePoll(1000, 
+                    session,
+                    checkFunc = get_count_ohlc,
+                    valueFunc = get_all_ohlc
+  )
+  profiles = reactivePoll(1000, 
+                      session,
+                      checkFunc = get_count_profiles,
+                      valueFunc = get_stock_profiles
+  )
   
-  output$table_debug = renderDT(tr(), options = list("pageLength" = 50))
-  
+  output$table_debug = renderDT(profiles(), options = list("pageLength" = 50))
+  # end example
   
   
   ### DEFINE REACTIVE DATASETS

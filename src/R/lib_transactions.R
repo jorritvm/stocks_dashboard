@@ -4,20 +4,12 @@
 #'
 #' @return
 #' @export
-#'
-#' @examples
 get_count_transactions = function() {
-  # open the db connection
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-
-  n = dbGetQuery(con, "SELECT count(*) FROM transactions")[1,1]
-  
-  # close
-  dbDisconnect(con)  
-  
+  n = get_count_table("transactions")
   return(n)
 }
+
+
 
 #' read complete transactions table
 #'

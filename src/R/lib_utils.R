@@ -2,6 +2,31 @@
 # NEW
 ##########################
 
+#' returns amount of records in a db table 
+#' 
+#' cheap function used to check if the datatable was changed and hook up to reactivePoll
+#'
+#' @param table 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_count_table = function(table) {
+  # open the db connection
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  
+  sql = paste0("SELECT count(*) FROM ", table)
+  n = dbGetQuery(con, sql)[1,1]
+  
+  # close
+  dbDisconnect(con)  
+  
+  return(n)
+}
+
+
 standardize = function(x) {
   return((x-min(x))/(max(x)-min(x)))
 }
