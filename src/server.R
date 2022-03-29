@@ -76,13 +76,19 @@ server = function(input, output, session) {
     plot_position_per_stock(pos_s)
   })
 
-  # ##############################################################p
-  # ### PAGE: plot
-  # observeEvent(rv$tr, { updateSelectInput(session = session, inputId = "pf_broker", choices = c("All", unique(rv$tr$account))) })
-  # 
-  # output$portfolio_position = renderPlotly({
-  #   plot_portfolio_evolution(input$pf_broker, input$pf_window, portfolio_positions() )
-  # })
+  ##############################################################p
+  ### PAGE: evolution
+  observeEvent(tr(), { 
+    updateSelectInput(session, 
+                      inputId = "pf_broker", 
+                      choices = c("All", unique(tr()$account))) 
+  })
+
+  output$portfolio_position = renderPlotly({
+    plot_portfolio_evolution(input$pf_broker, input$pf_window, portfolio_positions() )
+  })
+  
+  
   # 
   # ################################
   # ### PAGE: performance

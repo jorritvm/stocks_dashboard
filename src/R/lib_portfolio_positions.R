@@ -1,6 +1,72 @@
-expand_transactions_to_portfolio_positions = function(tr) {
-  profiles = get_stock_profiles()
+#' returns the current position (using latest close) per stock and per broker
+#'
+#' @param tr transactions data table
+#'
+#' @return a data.table with structure:
+#'         - symbol: character
+#'         - account: character
+#'         - amount: numeric
+#'         - price_adj: numeric
+#'         - latest_value: numeric
+#' @export
+get_current_position_per_stock_and_broker = function(tr, ohlc) {
+  pos_sb = copy(tr)
   
+  # correct signs
+  pos_sb = pos_sb[type == "sell", amount := amount * -1]
+  pos_sb = pos_sb[type == "transfer_out", amount := amount * -1]
+  
+  # aggregate transactions to current position
+  pos_sb = pos_sb[type != "div" & !type %like% "cash", 
+                  .(amount = sum(amount)), 
+                  by = .(symbol, account)][amount != 0]
+  
+  # add latest evaluation
+  pos_sb = pos_sb %>% 
+    left_join(get_latest_close(ohlc), by = "symbol") %>% 
+    copy()
+  pos_sb[, latest_value := amount * close]
+  
+  return(pos_sb)
+}
+
+
+#' returns an aggregate actual position per broker
+#'
+#' @param pos_sb output from get_current_position_per_stock_and_broker
+#'
+#' @return a data.table with structure:
+#'         - account: character
+#'         - portfolio: numeric
+#' @export
+get_current_position_per_broker = function(pos_sb) {
+  result = pos_sb[, .(portfolio = sum(latest_value)), by = .(account)]
+  return(result)
+}
+
+
+#' returns an aggregate actual position per stock
+#'
+#' @param trp  output from get_current_position_per_stock_and_broker
+#'
+#' @return a data.table with structure:
+#'         - symbol: character
+#'         - portfolio: numeric
+#'         - company_name: character
+#'         - key: character
+#' @export
+get_current_position_per_stock = function(pos_sb, profiles) {
+  pos_s = pos_sb %>% 
+    group_by(symbol) %>% 
+    summarise(portfolio = sum(latest_value)) %>%
+    left_join(profiles[, c("symbol", "company_name", "key")], by = "symbol") %>% 
+    as.data.table()
+  
+  return(pos_s)
+}
+
+
+expand_transactions_to_portfolio_positions = function(tr, profiles) {
   tr = tr[order(date)]
   
   start_date = min(tr$date)
@@ -171,63 +237,9 @@ expand_transactions_to_portfolio_positions = function(tr) {
 # }
 
 
-plot_portfolio_evolution = function(broker, pf_window, portfolio_positions) {
-  w = window_to_start_end_dates(pf_window)
-  
-  if (broker == "All") {
-    ppos = rbindlist(portfolio_positions)
-  } else {
-    ppos = portfolio_positions[[broker]]  
-  }
-  
-  ppos = ppos[date >= w$start & date <= w$end]
-  ppos_plotdata = ppos[, .(portfolio = sum(euro_position)), by = .(date)][order(date)]
-  
-  p = ggplotly(ggplot(ppos_plotdata, 
-                      aes(x=date, y=portfolio)) + 
-                 geom_line() + 
-                 labs(y = "Portfolio [EUR]") +     
-                 scale_x_date(limits = c(w$start, w$end), expand = c(0,0)) 
-              )
-  return(p)
-}
 
 
-#' creates a plot for actual portfolio position per broker
-#'
-#' @param pos_b 
-#'
-#' @return
-#' @export
-plot_position_per_broker = function(pos_b) {
-  pos_b = pos_b[order(account)]
-  fig = plot_ly(x = round(pos_b$portfolio,0), 
-                y = pos_b$account, 
-                type = 'bar', 
-                orientation = 'h') %>% 
-    layout(yaxis = list(autorange="reversed"))
-  
-  
-  return(fig)
-}
 
-
-#' creates a plot for actual portfolio position per stock (irrespective of broker)
-#'
-#' @param pos_s 
-#'
-#' @return
-#' @export
-plot_position_per_stock = function(pos_s) {
-  pos_s = pos_s[order(symbol)]
-  fig = plot_ly(x = round(pos_s$portfolio,0), 
-                y = pos_s$key, 
-                type = 'bar', 
-                orientation = 'h') %>% 
-    layout(yaxis = list(autorange="reversed"))
-  
-  return(fig)
-}
 
 #' calculate data linked to market timing for a certain stock
 #'

@@ -29,7 +29,7 @@ body = dashboardBody(tabItems(
         )
       ),
       tabPanel(
-        "Plot",
+        "Evolution",
         box_full_dark(
           selectInput("pf_broker", "Select broker", ""),
           radio_window_plot("pf_window"),
