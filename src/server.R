@@ -184,17 +184,17 @@ server = function(input, output, session) {
   # add fx to DB
   observeEvent(input$add_fx_btn, {
     add_fx = input$add_fx_symbol
-
+    
     # get FX (modifying the DB is a side-effect)
     start_date = today() - years(10) # attention - oanda only provides 180 days!!!
     dt_fx = get_fx_from_api(add_fx, start_date)
     safe_write_fx_data(dt_fx)
-
+    
     # update status (setting an RV is a side-effect)
     txt = paste("FX", add_fx, "added to the DB.")
     notify(txt, 10)
   })
-
+  
   # remove fx from DB
   observeEvent(unique_fx_symbols(), {
     updateSelectInput(session,
@@ -202,24 +202,24 @@ server = function(input, output, session) {
                       label = NULL,
                       choices = unique_fx_symbols())
   })
- 
+  
   observeEvent(input$remove_fx_btn, {
     remove_fx = input$remove_fx_symbol
-
+    
     # remove it from db (side effect)
     remove_fx_from_db(remove_fx)
-
+    
     # update status (setting an RV is a side-effect)
     txt = paste("FX", remove_fx, "deleted from the DB.")
     notify(txt, 10)
   })
-
+  
   # update all FX
   observeEvent(input$update_fx_btn, {
     # inform user that we are starting batch update
     id = notify("Updating all FX")
     on.exit(removeNotification(id), add = TRUE)
-
+    
     # batch update the fx data
     update_all_fx(fx())
     
@@ -331,76 +331,57 @@ server = function(input, output, session) {
                    ohlc_euro())
   })
 
-  # ################################
-  # ### PAGE: EDIT STOCK
-  # # add to DB
-  # observeEvent(input$add_stock_symbol_btn, {
-  #   add_symbol = input$add_stock_symbol
-  #   add_stock(add_symbol, input$add_stock_region)
-  #   
-  #   # update stocks profile
-  #   rv$profiles = get_stock_profiles()
-  #   
-  #   # update status reactive value
-  #   rv$added_symbol = add_symbol
-  # })
-  # 
-  # # update status text
-  # output$add_stock_output = renderText({
-  #   req(rv$added_symbol)
-  #   paste("Symbol", rv$added_symbol, "added to the DB.")
-  # })
-  # 
-  # ################################
-  # ### PAGE: REMOVE A STOCK FROM THE DB
-  # # update input list
-  # observe({
-  #   updateSelectInput(
-  #     session,
-  #     "remove_stock_symbol",
-  #     label = NULL,
-  #     choices = sort(rv$profiles$key)
-  #   )
-  # })
-  # 
-  # # remove from db
-  # observeEvent(input$remove_stock_symbol_btn, {
-  #   key_to_remove = input$remove_stock_symbol
-  #   
-  #   # remove it from db
-  #   remove_stock_from_db(key_to_remove)
-  #   
-  #   # update stocks profile
-  #   rv$profiles = get_stock_profiles()
-  #   
-  #   # update status reactive value
-  #   rv$removed_symbol = symbol_to_remove
-  # })
-  # 
-  # # update status text
-  # output$remove_stock_output = renderText({
-  #   req(rv$removed_symbol)
-  #   paste("Symbol", rv$removed_symbol, "deleted from the DB.")
-  # })
-  # 
-  # ################################
-  # ### PAGE: update OHLC
-  # # update db
-  # observeEvent(input$update_ohlc_btn, {
-  #   notif = paste(tstamp(" ","-",":"), "Updating all OHLC data")
-  #   id <- showNotification(notif, duration = NULL, closeButton = FALSE, type = "message")
-  #   on.exit(removeNotification(id), add = TRUE)
-  #   
-  #   update_all_ohlc()
-  #   rv$updated_ohlc =  paste(tstamp(" ","-",":"), "OHLC data updated for all stocks in the DB.")
-  # })
-  # # update status text
-  # output$update_ohlc_text = renderText({
-  #   req(rv$updated_ohlc)
-  #   rv$updated_ohlc
-  # })
   
- 
+  ################################
+  ### PAGE: EDIT STOCK
+  # add to DB
+  observeEvent(input$add_stock_symbol_btn, {
+    add_symbol = input$add_stock_symbol
+    
+    # inform user that we are starting expensive update
+    id = notify(paste("Started adding ", add_symbol, " to the DB."))
+    on.exit(removeNotification(id), add = TRUE)
+    
+    add_stock(add_symbol, 
+              input$add_stock_region)
+    
+    # inform user that we have finished the expensive update
+    txt = paste("Symbol", input$add_stock_symbol, "added to the DB.")
+    notify(txt, 10)
+  })
+
+  # remove stock from DB
+  observeEvent(profiles(), {
+    updateSelectInput(
+      session,
+      "remove_stock_symbol",
+      label = NULL,
+      choices = sort(profiles()[['key']])
+    )
+  })
+
+  observeEvent(input$remove_stock_symbol_btn, {
+    key_to_remove = input$remove_stock_symbol
+    remove_stock_from_db(key_to_remove)
+
+    # update status (setting an RV is a side-effect)
+    txt =  paste("Symbol", key_to_symbol(key_to_remove), "deleted from the DB.")
+    notify(txt, 10)
+  })
+
+  # update all stock OHLC
+  observeEvent(input$update_ohlc_btn, {
+    # inform user that we are starting batch update
+    id = notify( "Updating all stock OHLC data")
+    on.exit(removeNotification(id), add = TRUE)
+
+    # batch update the fx data
+    update_all_ohlc(ohlc())
+
+    # inform user that we have finished the batch update
+    notify("FX data updated for all currencies in the DB.", 10)
+
+  })
 
   
 }
