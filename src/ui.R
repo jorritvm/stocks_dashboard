@@ -78,10 +78,6 @@ body = dashboardBody(tabItems(
             )
           ),
           title = "Upload"
-        ),
-        box_full_light(
-          textOutput("update_transaction_text"),
-          title = "Info"
         )
       )
     )

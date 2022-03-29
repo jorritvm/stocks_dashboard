@@ -74,7 +74,8 @@ plot_portfolio_evolution = function(broker,
 }
 
 
-#' create a plot that shows price evolution of a stock and colors the region where you are holding that stock
+#' create a plot that shows price evolution of a stock.
+#' colors the region where you are holding that stock.
 #'
 #' @param pos_sb_evol_subset 
 #'
@@ -107,6 +108,7 @@ plot_market_timing_p = function(pos_sb_evol_subset) {
 
 
 #' create a plot that show how many units of a stock you are holding over time
+#' colors the region where you are holding that stock.
 #'
 #' @param pos_sb_evol_subset 
 #'
@@ -139,6 +141,7 @@ plot_market_timing_q = function(pos_sb_evol_subset) {
 
 
 #' create a plot that shows how much value of a stock you are holding over time
+#' colors the region where you are holding that stock.
 #'
 #' @param pos_sb_evol_subset 
 #'

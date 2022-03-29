@@ -59,7 +59,7 @@ safe_write_transaction_data = function(tr) {
   # drop new entries that are already in the DB - use dplyr
   safe_tr = anti_join(tr, 
                       all_tr, 
-                      by = c("symbol", "date", "type", "amount", "money", "account"
+                      by = c("symbol", "date", "type", "money", "account"
                              ))
   
   # write new records

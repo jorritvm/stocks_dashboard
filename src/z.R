@@ -18,3 +18,5 @@ pos_sb = get_current_position_per_stock_and_broker(pos_sb_evol)
 pos_sb_evol_subset = get_one_stock_evolution("ABI.BR | Anheuser-Busch InBev SA/NV",
                                             "2Y",
                                             pos_sb_evol)
+
+

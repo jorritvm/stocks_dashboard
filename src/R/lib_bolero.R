@@ -13,7 +13,7 @@
 #'
 #' @return nothing
 #' @export
-import_bolero_transaction_log = function(dt) { 
+import_bolero_transaction_log = function(dt, ohlc) { 
   # fix types
   dt[, date := ymd(numeric_date_to_iso8601(Datum))]
   dt[, str_date := as.character(date)]
@@ -23,6 +23,8 @@ import_bolero_transaction_log = function(dt) {
   dt[Details %like% "Aankoop", Event := "Aankoop"]
   dt[Details %like% "Verkoop", Event := "Verkoop"]
   dt[Details %like% "Provisionering|Terugstorting", Event := "cash_in"]
+  
+  if (any(is.na(dt$Event))) { print(dt) ; stop("Your bolero upload contains an unknown event") }
   
   dt[, bolero_description := str_trim(gsub("Aankoop|Verkoop|Online", "", Details))]
   
@@ -34,53 +36,49 @@ import_bolero_transaction_log = function(dt) {
   
   # subset rows for stock operations
   keep_these_types = c("Verkoop","Aankoop","Cashdividend","Herbeleggingsdividend")
-  dt1 = dt[Event %in% keep_these_types & Transactie %like% "effecten"]
+  dt_s = dt[Event %in% keep_these_types & Transactie %like% "effecten"]
+  
+  if (any(is.na(dt_s$yahoo))) { print(dt_s) ; stop("Your bolero upload contains new stocks that need a RIC mapping - complete the symbol column in the upload") }
   
   # bolero does not provide 'amount' so we have to guess it from the ohlc data!
   # if you made a transaction today, value date is in the future, so you wont have OHLC data, 
   # so we use todays close as future price estimate
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  df_ohlc = dbReadTable(con, "stock_ohlc")
-  df_ohlc = df_ohlc %>% 
+  mean_ohlc = ohlc %>% 
             mutate(price = (high + low) /2) %>%
             select(symbol, date, price)
-  dbDisconnect(con)
-  df_ohlc = df_ohlc %>% 
-            full_join(dt1[, .(date = str_date, symbol = yahoo)], by = c("symbol","date")) %>%
-            arrange(symbol, date) %>%
-            fill(price) %>%
-            mutate(date = ymd(date))
   
-  dt_p = dt1 %>% 
-    left_join(df_ohlc, by = c("yahoo" = "symbol", "date")) %>%
+  dt_s = dt_s %>% 
+    left_join(mean_ohlc, by = c("yahoo" = "symbol", "date")) %>%
     mutate(Aantal = round(abs(Waarde) / price))
-  # dt_p 
   
-  # subset rows for  cash operations
-  dt2 = dt[Event %in% c("cash_in", "cash_out")]
-  dt = rbind(dt1, dt2)
-  
-  # filter columns & set proper names
-  dt_p = dt_p[, .(symbol = yahoo,
+  dt_s = dt_s[, .(symbol = yahoo,
                   date = date,
                   type = Event,
                   amount = Aantal,
                   money = Waarde)]
+                  
+  # subset rows for  cash operations
+  dt_c = dt[Event %in% c("cash_in", "cash_out")]
+  dt_c = dt_c[, .(symbol, 
+                  date, 
+                  type = Event, 
+                  amount = NA, 
+                  money = Waarde)]
+
   # add cash transactions again
-  dt_p = rbind(dt_p,
-               dt2[, .(symbol, date, type = Event, amount = NA, money = Waarde)])
-  dt_p[tolower(type) %like% 'verkoop', type := "sell"]
-  dt_p[tolower(type) %like% 'aankoop', type := "buy"]
-  dt_p[tolower(type) %like% 'ividend', type := "div"]
-  dt_p[, amount := as.numeric(amount)]
-  dt_p[, account := "bolero"]
+  dt_all = rbind(dt_s,
+                 dt_c)
+  dt_all[tolower(type) %like% 'verkoop', type := "sell"]
+  dt_all[tolower(type) %like% 'aankoop', type := "buy"]
+  dt_all[tolower(type) %like% 'ividend', type := "div"] # todo: distinguish dist & acc dividend?
+  dt_all[, amount := as.numeric(amount)]
+  dt_all[, account := "bolero"]
   
-  safe_write_transaction_data(dt_p)
+  safe_write_transaction_data(dt_all)
 }
 
 
-#' add new entries for the BOLERO-Yahoo stock map to the DB if they don't exist yet
+#' add new entries for the BOLERO-Yahoo stock map to the DB if they don't exist yet and returns the full map
 #'
 #' @param upload_bolero_yahoo_map 
 #'

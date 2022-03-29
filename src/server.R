@@ -122,39 +122,38 @@ server = function(input, output, session) {
   output$transactions_table = renderDT(tr(), options = list("pageLength" = 50))
 
 
-  # ################################
-  # ### PAGE: batch upload transactions
-  # # handle file upload
-  # observeEvent(input$batch_portfolio_file, {
-  #   req(input$batch_portfolio_file)
-  #   
-  #   # read and detemrine upload file
-  #   dt = as.data.table(read.xlsx(input$batch_portfolio_file$datapath))
-  #   file_source = check_for_transaction_file_type(dt)
-  #   
-  #   # parse upload file
-  #   if (file_source == "saxo") {
-  #     import_saxo_transaction_log(dt)
-  #   }
-  #   if (file_source == "bolero") {
-  #     import_bolero_transaction_log(dt)
-  #   }
-  #   
-  #   rv$updated_transactions = rv$updated_transactions + 1
-  # })
-  # 
-  # # update status text
-  # output$update_transaction_text = renderText({
-  #   req(rv$updated_transactions)
-  #   "New transactions added to the DB."
-  # })
-  # 
-  # # update transactions reactive values dataset
-  # eventReactive(rv$updated_transactions, {
-  #   rv$updated_transactions = get_transactions()
-  # })
-  # 
-  
+  ################################
+  ### PAGE: batch upload transactions
+  # handle file upload
+  observeEvent(input$batch_portfolio_file, {
+    req(input$batch_portfolio_file)
+
+    # inform user that upload has started
+    id = notify("Upload started.")
+    on.exit(removeNotification(id), add = TRUE)
+    
+    print("notif OK")
+    
+    # read and determine type of upload file
+    dt = as.data.table(read.xlsx(input$batch_portfolio_file$datapath))
+    file_source = check_for_transaction_file_type(dt)
+
+    print("file read")
+    print(file_source)
+    
+    # parse upload file
+    if (file_source == "saxo") {
+      import_saxo_transaction_log(dt)
+    }
+    if (file_source == "bolero") {
+      import_bolero_transaction_log(dt, ohlc())
+    }
+    
+    # inform user that the upload has finished 
+    notify("Upload finished.", 10)
+  })
+
+
 ################################################################
 # CURRENCIES TAB
 ################################################################
