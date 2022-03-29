@@ -90,8 +90,9 @@ plot_market_timing_p = function(pos_sb_evol_subset) {
     ggplotly(
       ggplot(data = pos_sb_evol_subset,
            aes(x = date)) + 
-      geom_col(aes(y = price,  fill = amount_holding), width = 1) +
+      geom_col(aes(y = price,  fill = amount_holding, color =amount_holding), width = 1) +
       scale_fill_gradient(low = "white", high = "darkgreen", limits = c(0,NA)) +
+      scale_color_gradient(low = "white", high = "darkgreen", limits = c(0,NA)) +
       geom_line(aes(y = price), size = 1) +
       scale_x_date(
         limits = c(start, end),
@@ -120,8 +121,9 @@ plot_market_timing_q = function(pos_sb_evol_subset) {
     ggplotly(
       ggplot(data = pos_sb_evol_subset,
              aes(x = date)) + 
-      geom_col(aes(y = amount_holding,  fill = amount_holding), width = 1) +
+      geom_col(aes(y = amount_holding,  fill = amount_holding, color = amount_holding), width = 1) +
       scale_fill_gradient(low = "white", high = "darkgreen", limits = c(0,NA)) +
+      scale_color_gradient(low = "white", high = "darkgreen", limits = c(0,NA)) +
       geom_line(aes(y = amount_holding), size = 1) +
       scale_x_date(
         limits = c(start, end),
@@ -152,8 +154,9 @@ plot_market_timing_pq = function(pos_sb_evol_subset) {
     ggplotly(
       ggplot(data = pos_sb_evol_subset,
              aes(x = date)) + 
-      geom_col(aes(y = position_euro,  fill = amount_holding), width = 1) +
+      geom_col(aes(y = position_euro,  fill = amount_holding, color = amount_holding), width = 1) +
       scale_fill_gradient(low = "white", high = "darkgreen", limits = c(0,NA)) +
+      scale_color_gradient(low = "white", high = "darkgreen", limits = c(0,NA)) +
       geom_line(aes(y = position_euro), size = 1) +
       scale_x_date(
         limits = c(start, end),
