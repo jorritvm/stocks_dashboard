@@ -5,7 +5,7 @@ sidebar = dashboardSidebar(
   sidebarMenu(
     # menuItem("Portfolio", tabName = "portfolio"icon = icon("money-check-dollar-pen")),
     menuItem("Currencies", tabName = "currencies", icon = icon("coins")),
-    # menuItem("Stocks", tabName = "stocks", icon = icon("arrow-trend-up")),
+    menuItem("Stocks", tabName = "stocks", icon = icon("bar-chart-o")),
     menuItem("About", tabName = "about", icon = icon("info")),
     actionButton("debug_btn", label = "debug") # TODO: remove this at the end
   )
@@ -172,39 +172,20 @@ body = dashboardBody(tabItems(
       ),
       
       tabPanel(
-        "Add",
+        "Edit",
         box_half_dark(
           textInput("add_stock_symbol", "Enter Yahoo symbol to add a stock", ""),
           selectInput("add_stock_region", "Stock region", choices = c("US", "EU")),
           actionButton("add_stock_symbol_btn", "Add", icon("plus")),
           title = "Input"
         ),
-        box_half_light(
-          textOutput("add_stock_output"),
-          title = "Result"
-        )
-      ),
-      
-      tabPanel(
-        "Remove",
         box_half_dark(
           selectInput("remove_stock_symbol", "Remove a stock from profiles & OHLC, not from transactions!", ""),
           actionButton("remove_stock_symbol_btn", "Remove", icon("minus")),
           title = "Input"
         ),
-        box_half_light(
-          textOutput("remove_stock_output"),
-          title = "Result"
-        )
-      ),
-      tabPanel(
-        "Update",
-        box_half_dark(
+        box_full_dark(
           actionButton("update_ohlc_btn", "Update OHLC data", icon("sync")),
-          title = "Action"
-        ),
-        box_half_light(
-          textOutput("update_ohlc_text"),
           title = "Action"
         )
       )

@@ -33,7 +33,10 @@ get_all_fx = function() {
 
 #' returns a small table with for each fx the latest date & value
 #'
-#' @return
+#' @return a data.table with structure:
+#'         - fx: character
+#'         - date: Date
+#'         - rate: numeric
 #' @export
 get_latest_fx = function(fx) {
   result = fx[order(-date)][, .SD[1], by = fx]

@@ -41,15 +41,7 @@ server = function(input, output, session) {
                     session,
                     checkFunc = get_count_transactions,
                     valueFunc = get_transactions)
-  profiles = reactivePoll(1000,
-                          session,
-                          checkFunc = get_count_profiles,
-                          valueFunc = get_stock_profiles)
-  ohlc = reactivePoll(1000,
-                      session,
-                      checkFunc = get_count_ohlc,
-                      valueFunc = get_all_ohlc)
-  
+
 
   
   portfolio_positions = reactive({
@@ -58,16 +50,8 @@ server = function(input, output, session) {
   
   # ### REACTIVE values
   rv = reactiveValues(
-    msgs = list()
-    # fx = get_latest_fx(),
-    # added_fx = "",
-    # removed_fx = "",
-    # updated_fx = FALSE,
-    # focus_stock = "",
-    # added_symbol = "",
-    # removed_symbol = "",
-    # updated_ohlc = FALSE,
-    # updated_transactions = FALSE,
+    msgs = list(),
+    focus_stock = ""
   )
 
   
@@ -230,6 +214,7 @@ server = function(input, output, session) {
     notify(txt, 10)
   })
 
+  # update all FX
   observeEvent(input$update_fx_btn, {
     # inform user that we are starting batch update
     id = notify("Updating all FX")
@@ -242,63 +227,66 @@ server = function(input, output, session) {
     notify("FX data updated for all currencies in the DB.", 10)
   })
 
+   
+################################################################
+# STOCKS TAB
+################################################################
+  profiles = reactivePoll(1000,
+                          session,
+                          checkFunc = get_count_profiles,
+                          valueFunc = get_stock_profiles)
+  ohlc = reactivePoll(1000,
+                      session,
+                      checkFunc = get_count_ohlc,
+                      valueFunc = get_all_ohlc)
+  
+  
+  ################################
+  ### PAGE: LIST ALL STOCKS
+  # update table
+  output$stock_list = renderDT(get_stock_key_info(profiles(), ohlc()), 
+                               options = list("pageLength" = 50))
 
-  # output$update_fx_text = renderText({
-  #   start_fx_text()
-  # })
+  
+  ###############################
+  ### PAGE: PROFILE A STOCK
+  # update input list
+  observeEvent(input$profile_stock_key, { rv$focus_stock = input$profile_stock_key })
+  observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "profile_stock_key", selected = rv$focus_stock) })
 
-  output$update_fx_text = renderText({
-    req(rv$updated_fx)
-    rv$updated_fx
+  observeEvent(profiles(), {
+    updateSelectInput(session,
+                      "profile_stock_key",
+                      label = NULL,
+                      choices = profiles()[["key"]])
   })
-  # 
-  # ################################################################
-  # # STOCKS TAB
-  # ################################################################
-  # ################################
-  # ### PAGE: LIST ALL STOCKS
-  # # update table
-  # output$stock_list = renderDT(get_stock_key_info(rv$profiles), options = list("pageLength" = 50))
-  # 
-  # ################################
-  # ### PAGE: PROFILE A STOCK
-  # # update input list
-  # observeEvent(input$profile_stock_key, { rv$focus_stock = input$profile_stock_key })
-  # observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "profile_stock_key", selected = rv$focus_stock) })
-  #  
-  # observe({
-  #   updateSelectInput(session,
-  #                     "profile_stock_key",
-  #                     label = NULL,
-  #                     choices = rv$profiles$key)
-  # })
-  # 
-  # # update table
-  # output$profile_stock_table = renderTable({
-  #   # get_stock_profile_table(input$profile_stock_key)
-  #   req(input$pf_window)
-  #   mtcars
-  # })
-  # 
-  # ################################
-  # ### PAGE: CANDLESTICK
-  # # update input list
-  # observeEvent(input$cs_key, { rv$focus_stock = input$cs_key })
-  # observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "cs_key", selected = rv$focus_stock) })
-  # 
-  # observe({
-  #   updateSelectInput(session,
-  #                     "cs_key",
-  #                     label = NULL,
-  #                     choices = rv$profiles$key)
-  # })
-  # # update plot
-  # output$cs_plot = renderPlotly({
-  #   plot_candlestick(input$cs_key,
-  #                    input$cs_window,
-  #                    rv$profiles)
-  # })
-  # 
+
+  # update table
+  output$profile_stock_table = renderTable({
+    get_stock_profile_table(input$profile_stock_key, isolate(profiles()))
+  })
+  
+
+  ################################
+  ### PAGE: CANDLESTICK
+  # update input list
+  observeEvent(input$cs_key, { rv$focus_stock = input$cs_key })
+  observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "cs_key", selected = rv$focus_stock) })
+
+  observe({
+    updateSelectInput(session,
+                      "cs_key",
+                      label = NULL,
+                      choices = profiles()[["key"]])
+  })
+  # update plot
+  output$cs_plot = renderPlotly({
+    plot_candlestick(profiles(),
+                     ohlc(),
+                     input$cs_key,
+                     input$cs_window)
+  })
+
   # ################################
   # ### PAGE: BENCHMARK
   # # update input list
