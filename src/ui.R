@@ -1,11 +1,12 @@
-header = dashboardHeader(title = "Stocks dashboard")
+header = dashboardHeader(title = "Stocks dashboard",
+                         dropdownMenuOutput("notif_menu"))
 
 sidebar = dashboardSidebar(
   sidebarMenu(
-    menuItem("Portfolio", tabName = "portfolio"),
-    menuItem("Currencies", tabName = "currencies"),
-    menuItem("Stocks", tabName = "stocks"),
-    menuItem("About", tabName = "about"),
+    # menuItem("Portfolio", tabName = "portfolio"icon = icon("money-check-dollar-pen")),
+    menuItem("Currencies", tabName = "currencies", icon = icon("coins")),
+    # menuItem("Stocks", tabName = "stocks", icon = icon("arrow-trend-up")),
+    menuItem("About", tabName = "about", icon = icon("info")),
     actionButton("debug_btn", label = "debug") # TODO: remove this at the end
   )
 )

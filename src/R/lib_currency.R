@@ -1,38 +1,12 @@
-#' returns FX data for the requested symbol(s)
+#' returns amount of records in fx_rates table 
+#' 
+#' cheap function used to check if the datatable was changed and hook up to reactivePoll
 #'
-#' @param sym single symbol string or vector of multiple symbols
-#' @param start date
-#' @param end date
-#'
-#' @return tibble
+#' @return
 #' @export
-get_fx = function(fx_symbol, start = NULL, end = NULL) {
-  fx_symbol = toupper(fx_symbol)
-  
-  # open the db connection
-  db_fpfn = get_db_location()
-  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  
-  # use some dplyr for the select query
-  result = tbl(con, "fx_rates") %>%
-    filter(fx %in% fx_symbol) %>%
-    as_tibble()
-  result = result %>%
-    mutate(date = ymd(date))
-  result
-  if (!is.null(start)) {
-    result = result %>% 
-      filter(date >= start)
-  }
-  if (!is.null(end)) {
-    result = result %>% 
-      filter(date <= end)
-  } 
-  
-  # select the symbols already in the data table
-  dbDisconnect(con)  
-  
-  return(result)
+get_count_fx = function() {
+  n = get_count_table("fx_rates")
+  return(n)
 }
 
 
@@ -47,8 +21,7 @@ get_all_fx = function() {
   
   # use some dplyr for the select query
   result = tbl(con, "fx_rates") %>%
-    as.data.table()
-  result = result %>%
+    as.data.table() %>%
     mutate(date = ymd(date))
   
   # select the symbols already in the data table
@@ -155,15 +128,28 @@ remove_fx_from_db = function(fx) {
 #'
 #' @return
 #' @export
-plot_fx = function(fx, window) {
+plot_fx = function(fx_table, fx_symbol, window) {
   # translate window to start & end days
   w = window_to_start_end_dates(window)
   
-  # get ohlc data
-  data = get_fx(fx, w$start, w$end)
+  # get fx data for this symbol and this window
+  data =  fx_table %>% 
+    filter(fx == fx_symbol, date >= w$start, date <= w$end) %>%
+    arrange(date)
   
   # plotly
-  fig <- data %>% plot_ly(x = ~date,  line = list(color = 'black', width = 0.75), y = ~rate) 
+  fig <-
+    data %>% 
+    plot_ly(
+      x = ~ date,
+      y = ~ rate,
+      line = list(
+        color = 'black',
+        width = 0.75
+      ),
+      type = "scatter",
+      mode = "lines" # 'lines+markers'
+    ) 
   
   return(fig)
 }

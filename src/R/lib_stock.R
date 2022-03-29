@@ -122,8 +122,7 @@ get_all_ohlc = function() {
   
   # use some dplyr for the select query
   result = tbl(con, "stock_ohlc") %>%
-    as.data.table()
-  result = result %>%
+    as.data.table() %>%
     mutate(date = ymd(date))
   
   # close
