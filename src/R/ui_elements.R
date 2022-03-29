@@ -2,7 +2,7 @@
 radio_window_plot = function(id) {
   radioButtons(
     id,
-    "",
+    "Window",
     choices = list(
       "All" = "all",
       "5Y" = "5Y",

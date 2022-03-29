@@ -133,6 +133,45 @@ get_all_ohlc = function() {
 }
 
 
+#' extend OHLC table with closing price in euros
+#'
+#' @param ohlc 
+#' @param profiles 
+#' @param fx 
+#'
+#' @return a data.table with structure:
+#'         - symbol: character
+#'         - date: Date
+#'         - open: numeric
+#'         - high: numeric
+#'         - low: numeric
+#'         - close: numeric
+#'         - volume: numeric
+#'         - adjusted: numeric
+#'         - close_in_euro: numeric
+convert_ohlc_to_euro = function(ohlc, profiles, fx) {
+  # get the currency and put equivalent closing value in euro
+  ohlc_euro = ohlc %>% 
+    left_join(select(profiles, symbol, currency), by = "symbol") %>%
+    mutate(fx = paste0(currency,"/EUR")) %>%
+    left_join(fx, by = c("fx", "date"))
+  
+  ohlc_euro[fx == "EUR/EUR", rate := 1]
+  cols = c("open", "high", "low", "close", "adjusted")
+  ohlc_euro[, (cols) := lapply(.SD, function(x) {x * rate} ), .SDcols = cols]
+  
+  # drop excess tables
+  ohlc_euro[, currency := NULL]
+  ohlc_euro[, fx := NULL]
+  ohlc_euro[, rate := NULL]
+  
+  # drop data with NA because we are missing data (like fx) sometimes
+  ohlc_euro = ohlc_euro[complete.cases(ohlc_euro)]
+  
+  return(ohlc_euro)
+}
+
+
 #' returns a small table with for each stock the latest close date & value
 #'
 #' @return a data.table with structure:
@@ -197,7 +236,9 @@ get_ohlc = function(ohlc, sym, start_date = NULL, end_date = NULL) {
 #' @export
 plot_candlestick = function(profiles,
                             ohlc,
+                            ohlc_euro,
                             k,
+                            in_euro,
                             window) {
   
   # get profile info
@@ -210,13 +251,17 @@ plot_candlestick = function(profiles,
   w = window_to_start_end_dates(window)
   
   # get ohlc data
-  data = get_ohlc(ohlc, c(sym), w$start, w$end)
+  ohlc_choice = if(in_euro) { ohlc_euro } else { ohlc }
+  data = get_ohlc(ohlc_choice, c(sym), w$start, w$end)
+  
+  # currency
+  currency = ifelse(in_euro, "EUR", profile$currency)
   
   # plotly
   fig <- data %>% plot_ly(x = ~date, type="candlestick",
                           open = ~open, close = ~close,
                           high = ~high, low = ~low) 
-  fig <- fig %>% layout(xaxis = list(rangeslider = list(visible = F)),  yaxis = list(title = paste0("Close [",profile$currency, "]")))
+  fig <- fig %>% layout(xaxis = list(rangeslider = list(visible = F)),  yaxis = list(title = paste0("Close [",currency, "]")))
   fig <- fig %>% add_lines(x = ~date, y = ~close, line = list(color = 'black', width = 0.75), inherit = FALSE)
   fig <- fig %>% layout(showlegend = FALSE)
   
@@ -234,7 +279,9 @@ plot_candlestick = function(profiles,
 #' @export
 plot_benchmark = function(key,
                           bench,
-                          window) {
+                          window,
+                          in_euro,
+                          ohlc) {
   
   # get symbols
   sym = key_to_symbol(key)
@@ -244,8 +291,8 @@ plot_benchmark = function(key,
   w = window_to_start_end_dates(window)
   
   # get ohlc data
-  dt_s = as.data.table(get_ohlc(sym,   w$start, w$end))
-  dt_b = as.data.table(get_ohlc(bench, w$start, w$end))
+  dt_s = as.data.table(get_ohlc(ohlc, sym,   w$start, w$end))
+  dt_b = as.data.table(get_ohlc(ohlc, bench, w$start, w$end))
   
   # keep only overlapping window
   start = min(dt_s$date, dt_b$date)

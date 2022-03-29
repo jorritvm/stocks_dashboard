@@ -8,4 +8,6 @@ tr = get_transactions()
 profiles = get_stock_profiles()
 ohlc =  get_all_ohlc()
 fx = get_all_fx()
+
+ohlc_euro =  convert_ohlc_to_euro(ohlc, profiles, fx)
 portfolio_positions = expand_transactions_to_portfolio_positions(tr)

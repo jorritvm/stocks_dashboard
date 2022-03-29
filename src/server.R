@@ -240,6 +240,9 @@ server = function(input, output, session) {
                       checkFunc = get_count_ohlc,
                       valueFunc = get_all_ohlc)
   
+  ohlc_euro = reactive({
+    convert_ohlc_to_euro(ohlc(), profiles(), fx())
+  })
   
   ################################
   ### PAGE: LIST ALL STOCKS
@@ -283,43 +286,52 @@ server = function(input, output, session) {
   output$cs_plot = renderPlotly({
     plot_candlestick(profiles(),
                      ohlc(),
+                     ohlc_euro(),
                      input$cs_key,
+                     input$cs_in_euro,
                      input$cs_window)
   })
 
+  
+  ################################
+  ### PAGE: BENCHMARK
+  # update input list
+  observeEvent(input$bench_key, { rv$focus_stock = input$bench_key })
+  observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "bench_key", selected = rv$focus_stock) })
+
+  observeEvent(profiles(), {
+    updateSelectInput(session,
+                      "bench_key",
+                      label = NULL,
+                      choices = profiles()[["key"]])
+  })
+  observeEvent(profiles(), {
+    # set default benchmark symbol
+    if ("IWDA.AS" %in% profiles()[["symbol"]]) {
+      def = "IWDA.AS" 
+    } else {
+      def = profiles()[1, symbol]
+    }
+    
+    updateSelectInput(
+      session,
+      "bench_base",
+      label = NULL,
+      choices = profiles()[["key"]],
+      selected = profiles()[symbol == def, "key"]
+    )
+  })
+  # update plot
+  output$bench_plot = renderPlotly({
+    plot_benchmark(input$bench_key,
+                   input$bench_base,
+                   input$bench_window,
+                   input$bench_in_euro,
+                   ohlc())
+  })
+
   # ################################
-  # ### PAGE: BENCHMARK
-  # # update input list
-  # observeEvent(input$bench_key, { rv$focus_stock = input$bench_key })
-  # observeEvent(rv$focus_stock, { updateSelectInput(session = session, inputId = "bench_key", selected = rv$focus_stock) })
-  # 
-  # observe({
-  #   updateSelectInput(session,
-  #                     "bench_key",
-  #                     label = NULL,
-  #                     choices = rv$profiles$key)
-  # })
-  # observe({
-  #   def = NULL
-  #   if ("IWDA.AS" %in% rv$profiles$symbol)
-  #     def = "IWDA.AS"
-  #   updateSelectInput(
-  #     session,
-  #     "bench_base",
-  #     label = NULL,
-  #     choices = rv$profiles$key,
-  #     selected = rv$profiles[symbol == def, "key"]
-  #   )
-  # })
-  # # update plot
-  # output$bench_plot = renderPlotly({
-  #   plot_benchmark(input$bench_key,
-  #                  input$bench_base,
-  #                  input$bench_window)
-  # })
-  # 
-  # ################################
-  # ### PAGE: ADD A STOCK TO THE DB
+  # ### PAGE: EDIT STOCK
   # # add to DB
   # observeEvent(input$add_stock_symbol_btn, {
   #   add_symbol = input$add_stock_symbol

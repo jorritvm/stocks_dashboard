@@ -152,7 +152,8 @@ body = dashboardBody(tabItems(
       tabPanel(
         "Candlestick",
         box_full_dark(
-          selectInput("cs_key", "", ""),
+          selectInput("cs_key", "Stock", ""),
+          checkboxInput("cs_in_euro", label = "Force in EURO", value = FALSE),
           radio_window_plot("cs_window"),
           title = "Input"
         ),
@@ -164,6 +165,7 @@ body = dashboardBody(tabItems(
         box_full_dark(
           selectInput("bench_key", "Stock", ""),
           selectInput("bench_base", "Benchmark", ""),
+          checkboxInput("bench_in_euro", label = "Force compare in EURO", value = FALSE),
           radio_window_plot("bench_window"),
           title = "Input"
         ),
