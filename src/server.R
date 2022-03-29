@@ -76,16 +76,16 @@ server = function(input, output, session) {
 
   ##############################################################p
   ### PAGE: evolution
-  observeEvent(tr(), { 
+  observeEvent(pos_sb(), { 
     updateSelectInput(session, 
                       inputId = "pf_broker", 
-                      choices = c("All", unique(tr()$account))) 
+                      choices = c("All", unique(pos_sb()$account))) 
   })
 
   output$portfolio_position = renderPlotly({
     plot_portfolio_evolution(input$pf_broker, 
                              input$pf_window, 
-                             portfolio_positions() )
+                             pos_sb_evol() )
   })
   
   
@@ -155,14 +155,14 @@ server = function(input, output, session) {
   # 
   
 ################################################################
-# CURRENCIES
+# CURRENCIES TAB
 ################################################################
   fx = reactivePoll(1000,
                     session,
                     checkFunc = get_count_fx,
                     valueFunc = get_all_fx)
   
-  unique_fx_symbols = reactive({ unique(fx()[['fx']]) })
+  unique_fx_symbols = reactive({ unique(fx()$fx) })
   
   
   ################################
@@ -271,7 +271,7 @@ server = function(input, output, session) {
     updateSelectInput(session,
                       "profile_stock_key",
                       label = NULL,
-                      choices = profiles()[["key"]])
+                      choices = profiles()$key)
   })
 
   # update table
@@ -290,7 +290,7 @@ server = function(input, output, session) {
     updateSelectInput(session,
                       "cs_key",
                       label = NULL,
-                      choices = profiles()[["key"]])
+                      choices = profiles()$key)
   })
   # update plot
   output$cs_plot = renderPlotly({
@@ -313,11 +313,11 @@ server = function(input, output, session) {
     updateSelectInput(session,
                       "bench_key",
                       label = NULL,
-                      choices = profiles()[["key"]])
+                      choices = profiles()$key)
   })
   observeEvent(profiles(), {
     # set default benchmark symbol
-    if ("IWDA.AS" %in% profiles()[["symbol"]]) {
+    if ("IWDA.AS" %in% profiles()$symbol) {
       def = "IWDA.AS" 
     } else {
       def = profiles()[1, symbol]
@@ -327,7 +327,7 @@ server = function(input, output, session) {
       session,
       "bench_base",
       label = NULL,
-      choices = profiles()[["key"]],
+      choices = profiles()$key,
       selected = profiles()[symbol == def, "key"]
     )
   })
@@ -366,7 +366,7 @@ server = function(input, output, session) {
       session,
       "remove_stock_symbol",
       label = NULL,
-      choices = sort(profiles()[['key']])
+      choices = sort(profiles()$key)
     )
   })
 
