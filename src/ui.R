@@ -16,16 +16,16 @@ body = dashboardBody(tabItems(
 
   tabItem(
     tabName = "dashboard",
-    valueBox(123, "Total stocks", icon = icon("euro"), color = "aqua", width = 6),
-    valueBox(456, "Total cash", icon = icon("euro"), color = "aqua", width = 6),
+    valueBox(123, "Total stocks", icon = icon("euro"), color = "green", width = 6),
+    valueBox(456, "Total cash", icon = icon("euro"), color = "green", width = 6),
     valueBox(123, "Overall performance", icon = icon("sort"), color = "aqua", width = 6),
     valueBox(456, "YTD performance", icon = icon("sort"), color = "aqua", width = 6),
     valueBox(123, "Best stock overall", icon = icon("sort"), color = "aqua", width = 6),
-    valueBox(456, "Worst stock overall", icon = icon("sort"), color = "aqua", width = 6),
+    valueBox(456, "Worst stock overall", icon = icon("sort"), color = "orange", width = 6),
     valueBox(123, "Best stock YTD", icon = icon("sort"), color = "aqua", width = 6),
-    valueBox(456, "Worst stock YTD", icon = icon("sort"), color = "aqua", width = 6),
-    valueBox(789, "Latest OHLC update", icon = icon("refresh"), color = "aqua", width = 6),
-    valueBox(789, "Latest FX update", icon = icon("refresh"), color = "aqua", width = 6),
+    valueBox(456, "Worst stock YTD", icon = icon("sort"), color = "orange", width = 6),
+    valueBox(789, "Latest OHLC update", icon = icon("refresh"), color = "navy", width = 6),
+    valueBox(789, "Latest FX update", icon = icon("refresh"), color = "navy", width = 6)
   ),
   
   
@@ -188,7 +188,7 @@ body = dashboardBody(tabItems(
       tabPanel(
         "Edit",
         box_half_dark(
-          textInput("add_stock_symbol", "Enter Yahoo symbol to add a stock", ""),
+          textInput("add_stock_symbol", "Enter RIC (Reuters instrument code) to add a stock", ""),
           selectInput("add_stock_region", "Stock region", choices = c("US", "EU")),
           actionButton("add_stock_symbol_btn", "Add", icon("plus")),
           title = "Input"
