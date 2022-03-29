@@ -74,6 +74,7 @@ server = function(input, output, session) {
     plot_position_per_stock(pos_s)
   })
 
+  
   ##############################################################p
   ### PAGE: evolution
   observeEvent(pos_sb(), { 
@@ -131,16 +132,11 @@ server = function(input, output, session) {
     # inform user that upload has started
     id = notify("Upload started.")
     on.exit(removeNotification(id), add = TRUE)
-    
-    print("notif OK")
-    
+
     # read and determine type of upload file
     dt = as.data.table(read.xlsx(input$batch_portfolio_file$datapath))
     file_source = check_for_transaction_file_type(dt)
 
-    print("file read")
-    print(file_source)
-    
     # parse upload file
     if (file_source == "saxo") {
       import_saxo_transaction_log(dt)

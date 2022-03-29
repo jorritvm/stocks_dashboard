@@ -44,11 +44,11 @@ get_transactions = function() {
 #' safely write a transaction data to the DB, if part of the transactions already exist
 #' it first deletes the old info, then adds the new data, in order to avoid duplicates
 #'
-#' @param tr data.table containing symbol, date, type, amount, money columns
+#' @param new_tr data.table containing symbol, date, type, amount, money columns
 #'
 #' @return
 #' @export
-safe_write_transaction_data = function(tr) {
+safe_write_transaction_data = function(new_tr) {
   # open the db connection
   db_fpfn = get_db_location()
   con <- dbConnect(RSQLite::SQLite(), db_fpfn)
@@ -57,7 +57,7 @@ safe_write_transaction_data = function(tr) {
   all_tr = get_transactions()
   
   # drop new entries that are already in the DB - use dplyr
-  safe_tr = anti_join(tr, 
+  safe_tr = anti_join(new_tr, 
                       all_tr, 
                       by = c("symbol", "date", "type", "money", "account"
                              ))

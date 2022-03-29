@@ -1,3 +1,5 @@
+# dt = as.data.table(read.xlsx(file.choose()))
+
 #' imports saxo transaction log into datbase
 #'
 #' @param dt 
@@ -14,6 +16,7 @@ import_saxo_transaction_log = function(dt) {
   
   # fix symbol
   if (!"symbol" %in% names(dt)) dt[, symbol := NA]
+  
   upload_saxo_yahoo_map = unique(dt[!is.na(symbol), .(saxo = `Instrument-Id`, yahoo = symbol)])
   full_saxo_yahoo_map = safe_write_saxo_map(upload_saxo_yahoo_map)
   dt = dt %>% left_join(full_saxo_yahoo_map, by = c("Instrument-Id" = "saxo"))
@@ -33,7 +36,7 @@ import_saxo_transaction_log = function(dt) {
   dt[tolower(type) %like% 'ividend', type := "div"]  
   dt[amount == "-", amount := ""]
   dt[, amount := as.numeric(amount)]
-  dt[, account = "saxo"]
+  dt[, account := "saxo"]
   
   safe_write_transaction_data(dt)
 }
@@ -72,7 +75,7 @@ safe_write_saxo_map = function(upload_saxo_yahoo_map) {
   
   # make sure to also add the new stocks to the DB
   for (i in 1:nrow(new_saxo_yahoo_items)) {
-    add_stock(new_bolero_yahoo_items[i, saxo])
+    add_stock(new_saxo_yahoo_items[i, yahoo])
   }
   
   # return the full set

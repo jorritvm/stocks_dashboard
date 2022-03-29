@@ -201,6 +201,9 @@ get_ohlc = function(ohlc, sym, start_date = NULL, end_date = NULL) {
 #' @return
 #' @export
 add_stock = function(add_symbol, region = NULL) {
+  # make sure it does not exist in our DB
+  remove_stock_from_db_by_symbol(add_symbol)
+  
   # get profile
   profile = get_profile_info_from_api(add_symbol, region, api_read_key())
   safe_write_stock_profile(profile)
@@ -267,11 +270,14 @@ safe_write_ohlc_data = function(ohlc) {
 #' @return
 #' @export
 remove_stock_from_db = function(key_to_remove) {
+  symbol = key_to_symbol(key_to_remove)
+  remove_stock_from_db_by_symbol(symbol)
+}
+
+remove_stock_from_db_by_symbol = function(symbol) {
   # open the db connection
   db_fpfn = get_db_location()
   con <- dbConnect(RSQLite::SQLite(), db_fpfn)
-  
-  symbol = key_to_symbol(key_to_remove)
   
   # delete OHLC
   query = 'DELETE
