@@ -12,9 +12,9 @@ plot_position_per_broker = function(pos_b, pos_c) {
   fig = ggplotly(
     ggplot(pos, aes(x = account, y = value)) +
     geom_col(aes(fill = variable), width = 0.7) + 
-    scale_y_continuous(labels = scales::comma) +
-    labs(x = "") +
-    scale_fill_brewer(palette = "Paired")
+    scale_y_continuous(labels = scales::comma, expand = c(0,0,0,5000)) +
+    labs(x = "", y = "") +
+    scale_fill_brewer(palette = "Paired") +
     coord_flip() 
   )
          

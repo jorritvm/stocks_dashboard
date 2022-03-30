@@ -34,6 +34,41 @@ extend_transactions_with_cumulative_data = function(tr) {
     trb[type %in% c('transfer_out', 'sell'), amount_delta := -1 * abs(amount)]
     trb[, amount_holding := cumsum(amount_delta), by = symbol]
     
+    # extend with acquire price & value
+    trb[, transaction_price := 0]
+    trb[type %in% c("buy", "sell", "transfer_in", "transfer_out"), transaction_price := money / amount]
+    
+    trb[, mean_acquire_price := 0]
+    trb[, mean_acquire_value := 0]
+    trb_per_stock = list()
+    for (stock in unique(trb$symbol)) {
+      if (is.na(stock)) {
+        trb_s = trb[is.na(symbol)]
+      } else {
+        trb_s = trb[symbol == stock]
+      
+        map = 0 
+        for (j in 1:nrow(trb_s)) {
+          if (trb_s[j, type] %in% c("buy", "transfer_in")) {
+            previously_holding = trb_s[j, amount_holding] - trb_s[j, amount_delta]
+            newly_acquired = trb_s[j, amount_delta]
+            currently_holding = trb_s[j, amount_holding]
+            transaction_price = trb_s[j, transaction_price]
+            map = (map *  previously_holding + transaction_price * newly_acquired) / currently_holding
+            trb_s[j, mean_acquire_price := map]
+            trb_s[j, mean_acquire_value := map * currently_holding]
+          } else if (trb_s[j, type] %in% c("sell","transfer_in")) {
+            currently_holding = trb_s[j, amount_holding]
+            trb_s[j, mean_acquire_price := map]
+            trb_s[j, mean_acquire_value := map * currently_holding]
+          }
+        }
+      }
+      trb_per_stock[[stock]] = trb_s
+    }
+    trb = rbindlist(trb_per_stock) 
+    trb = trb[order(date)]
+    
     tr_ext_list[[broker]] = trb
   }
   tr_ext = rbindlist(tr_ext_list)
@@ -117,14 +152,23 @@ get_stock_position_over_time_per_stock_and_broker = function(tr_ext,
   for (broker in brokers) {
     pf = tr_ext[account == broker][order(date)]
     
-    # filter to positions that have impacted cash position
+    # filter to positions that have impacted stock positions
     pf = pf[abs(amount_delta) > 0]
     
     # if multiple transactions were done on the same day we need to keep only the last one
     pf = pf[, .SD[nrow(.SD)], by = .(date, symbol)]
+    setnames(pf,
+             c("amount_holding", 
+               "mean_acquire_price", 
+               "mean_acquire_value"),
+             c("amo",
+               "map",
+               "mav"))
     
     # go wide, one column per stock
-    pf = dcast(pf, formula = date ~ symbol, value.var = "amount_holding")
+    pf = dcast(pf, formula = date ~ symbol, value.var = c("amo",
+                                                          "map",
+                                                          "mav"))
     
     # expand timeframe
     start_date = min(tr_ext$date)
@@ -145,9 +189,18 @@ get_stock_position_over_time_per_stock_and_broker = function(tr_ext,
     # bring it back to long form
     pf = melt(pf,
               id.vars = 'date',
-              variable.name = "symbol",
-              value.name = "amount_holding")
-    
+              variable.name = "col",
+              value.name = "value")
+    pf[, c("what", "symbol") := tstrsplit(col, "_", fixed=TRUE)]
+    pf = dcast(pf, date + symbol ~ what, value.var = "value")
+    setnames(pf,
+             c("amo",
+               "map",
+               "mav"),
+            c("amount_holding", 
+              "mean_acquire_price", 
+              "mean_acquire_value"))
+
     # add ohlc data
     pf = merge(pf,
                ohlc_euro[, .(symbol, date, price = close)],
@@ -159,6 +212,10 @@ get_stock_position_over_time_per_stock_and_broker = function(tr_ext,
     
     # calculate portfolio position
     pf[, position_euro := amount_holding * price]
+    
+    # calculate performance in percent
+    pf[, performance := ((position_euro / mean_acquire_value) -1) * 100]
+    pf[is.nan(performance), performance := 0]
     
     # sort output
     setorderv(pf, c("date", "symbol"))

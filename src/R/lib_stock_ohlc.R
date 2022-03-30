@@ -1,5 +1,3 @@
-
-
 #' collect the OHLC data of a given stock yahoo api via quantmod
 #' 
 #' Note: All days in the window [start_date, end_date] that are closing days on the exchange are omitted from the result.
