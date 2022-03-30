@@ -7,8 +7,7 @@ sidebar = dashboardSidebar(
     menuItem("Portfolio", tabName = "portfolio", icon = icon("pie-chart")),
     menuItem("Currencies", tabName = "currencies", icon = icon("coins")),
     menuItem("Stocks", tabName = "stocks", icon = icon("bar-chart-o")),
-    menuItem("About", tabName = "about", icon = icon("info")),
-    actionButton("debug_btn", label = "debug") # TODO: remove this at the end
+    menuItem("About", tabName = "about", icon = icon("info"))
   )
 )
 
@@ -16,16 +15,16 @@ body = dashboardBody(tabItems(
 
   tabItem(
     tabName = "dashboard",
-    valueBox(123, "Total stocks", icon = icon("euro"), color = "green", width = 6),
-    valueBox(456, "Total cash", icon = icon("euro"), color = "green", width = 6),
-    valueBox(123, "Overall performance", icon = icon("sort"), color = "aqua", width = 6),
-    valueBox(456, "YTD performance", icon = icon("sort"), color = "aqua", width = 6),
-    valueBox(123, "Best stock overall", icon = icon("sort"), color = "aqua", width = 6),
-    valueBox(456, "Worst stock overall", icon = icon("sort"), color = "orange", width = 6),
-    valueBox(123, "Best stock YTD", icon = icon("sort"), color = "aqua", width = 6),
-    valueBox(456, "Worst stock YTD", icon = icon("sort"), color = "orange", width = 6),
-    valueBox(789, "Latest OHLC update", icon = icon("refresh"), color = "navy", width = 6),
-    valueBox(789, "Latest FX update", icon = icon("refresh"), color = "navy", width = 6)
+    valueBoxOutput("vb_total_stocks", width = 6),
+    valueBoxOutput("vb_total_cash", width = 6),
+    valueBoxOutput("overall_performance", width = 6),
+    valueBoxOutput("ytd_performance", width = 6),
+    valueBoxOutput("best_stock_overall", width = 6),
+    valueBoxOutput("worst_stock_overall", width = 6),
+    valueBoxOutput("best_stock_ytd", width = 6),
+    valueBoxOutput("worst_stock_ytd", width = 6),
+    valueBoxOutput("latest_ohlc_update", width = 6),
+    valueBoxOutput("latest_fx_update", width = 6)
   ),
   
   
