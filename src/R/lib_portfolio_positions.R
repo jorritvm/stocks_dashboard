@@ -80,6 +80,17 @@ get_cash_position_over_time_per_broker = function(tr_ext) {
   cash_position = rbindlist(cash_position_list, idcol = "account")
 }
   
+#' returns latest cash postion per broker
+#'
+#' @param cash_b_evol 
+#'
+#' @return
+#' @export
+get_current_cash_per_broker = function(cash_b_evol) {
+    cpos = cash_b_evol[order(-date)][, .SD[1], by = account][, .(account, cash = cash_position)]  
+    return(cpos)
+}
+
 
 #' returns the evolution over time of every stock per broker in euro
 #'
@@ -214,7 +225,7 @@ get_current_position_per_stock_and_broker = function(pos_sb_evol) {
 #'         - portfolio: numeric
 #' @export
 get_current_position_per_broker = function(pos_sb) {
-  result = pos_sb[, .(position_euro = sum(position_euro)), by = .(account)]
+  result = pos_sb[, .(stocks = sum(position_euro)), by = .(account)]
   return(result)
 }
 

@@ -74,7 +74,9 @@ server = function(input, output, session) {
   output$position_per_broker = renderPlotly({
     
     pos_b = get_current_position_per_broker(pos_sb())
-    plot_position_per_broker(pos_b)
+    pos_c = get_current_cash_per_broker(cash_b_evol())
+    plot_position_per_broker(pos_b, 
+                             pos_c)
   })
 
   output$position_per_stock = renderPlotly({

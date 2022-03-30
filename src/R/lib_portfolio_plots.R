@@ -4,15 +4,20 @@
 #'
 #' @return
 #' @export
-plot_position_per_broker = function(pos_b) {
-  pos_b = pos_b[order(account)]
-  fig = plot_ly(x = round(pos_b$position_euro,0), 
-                y = pos_b$account, 
-                type = 'bar', 
-                orientation = 'h') %>% 
-    layout(yaxis = list(autorange="reversed"))
+plot_position_per_broker = function(pos_b, pos_c) {
+  pos = merge(pos_c, pos_b, by = "account")
+  pos = melt(pos, id.vars = "account")
+  pos = pos[order(account)]
   
-  
+  fig = ggplotly(
+    ggplot(pos, aes(x = account, y = value)) +
+    geom_col(aes(fill = variable), width = 0.7) + 
+    scale_y_continuous(labels = scales::comma) +
+    labs(x = "") +
+    scale_fill_brewer(palette = "Paired")
+    coord_flip() 
+  )
+         
   return(fig)
 }
 
