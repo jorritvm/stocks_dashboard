@@ -42,7 +42,12 @@ body = dashboardBody(tabItems(
         box_full_light(
           plotlyOutput("position_per_stock"),
           title = "Position per stock [EUR]"
+        ),
+        box_full_light(
+          DTOutput("positions_per_stock_broker_tbl"),
+          title = "Overview of positions per stock & broker"
         )
+        
       ),
       tabPanel(
         "Evolution",

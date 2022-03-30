@@ -83,6 +83,10 @@ server = function(input, output, session) {
     pos_s = get_current_position_per_stock(pos_sb(), profiles())
     plot_position_per_stock(pos_s)
   })
+  
+  
+  output$positions_per_stock_broker_tbl =  renderDT(pos_sb(), 
+                                                    options = list("pageLength" = 50))
 
   
   ##############################################################p

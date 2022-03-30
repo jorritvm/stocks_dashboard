@@ -214,8 +214,13 @@ get_stock_position_over_time_per_stock_and_broker = function(tr_ext,
     pf[, position_euro := amount_holding * price]
     
     # calculate performance in percent
-    pf[, performance := ((position_euro / mean_acquire_value) -1) * 100]
-    pf[is.nan(performance), performance := 0]
+    pf[, performance_rel := ((position_euro / mean_acquire_value) -1) * 100]
+    pf[is.nan(performance_rel), performance_rel := 0]
+    pf[is.infinite(performance_rel), performance_rel := 0]
+    
+    pf[, performance_abs := (position_euro - mean_acquire_value)]
+    pf[is.nan(performance_abs), performance_abs := 0]
+    pf[is.infinite(performance_abs), performance_abs := 0]
     
     # sort output
     setorderv(pf, c("date", "symbol"))
@@ -267,8 +272,25 @@ get_one_stock_evolution = function(timing_key,
 #'         - position_euro: numeric
 #' @export
 get_current_position_per_stock_and_broker = function(pos_sb_evol) {
-  x = pos_sb_evol[order(-date)][, .SD[1], by = .(account, symbol)][amount_holding > 0][order(account, symbol)]
-  x[, date := NULL]
+  x = pos_sb_evol[order(-date)][
+    , .SD[1], by = .(account, symbol)][
+      amount_holding > 0][
+        order(account, symbol)]
+  setcolorder(
+    x,
+    c(
+      "date",
+      "account",
+      "symbol",
+      "amount_holding",
+      "price",
+      "position_euro",
+      "mean_acquire_price",
+      "mean_acquire_value",
+      "performance_rel",
+      "performance_abs"
+    )
+  )
   return(x)
 }
 
@@ -306,98 +328,6 @@ get_current_position_per_stock = function(pos_sb, profiles) {
   
   return(pos_s)
 }
-
-
-
-
-# TOD0
-# expand_transactions_to_cash_positions = function(tr) {
-#   profiles = get_stock_profiles()
-#   
-#   tr = tr[order(date)]
-#   
-#   start_date = min(tr$date)
-#   # end_date = max(tr$date)
-#   end_date = today()
-#   
-#   brokers = unique(tr$account)
-#   portfolio_list = list()
-#   for (broker in brokers) {
-#     trb = tr[account == broker]  
-#     trb[type == 'sell',         amount := -1 * abs(amount)]
-#     trb[type == 'cash_out',     money  := -1 * abs(money)]
-#     portfolio = trb[type %in% c("buy", "sell", "cash_in", "cash_out")]
-#     
-#     # set up currency & desired FX
-#     portfolio = merge(portfolio, 
-#                       profiles[, .(symbol, currency)], 
-#                       by = "symbol")
-#     portfolio[, fx := "EUR/EUR"]
-#     portfolio[currency != "EUR", fx := paste0(currency, "/EUR")]
-#     
-#     # fetch fx rates
-#     fx = get_all_fx()
-#     portfolio = merge(portfolio,
-#                       fx,
-#                       by = c("date","fx"),
-#                       all.x = TRUE)
-#     portfolio[fx == "EUR/EUR", rate := 1]
-#     portfolio[is.na(fx), rate := 1] # this is a red flag, an FX should be added to the db!
-#     portfolio = portfolio[, rate := na.locf.0b(rate), by = .(symbol, fx)] # make sure we fill out missing FX until today
-#     
-#     # add ohlc data
-#     ohlc = get_all_ohlc()
-#     portfolio = merge(portfolio, 
-#                       ohlc[, .(symbol, date, price = adjusted)], 
-#                       by = c("symbol", "date"),
-#                       all.x = TRUE)
-#     
-#     # fill out the NA in the OHLC data (e.g. for the weekends)
-#     portfolio[, price := na.locf.cb(price), by = symbol]
-#     
-#     
-#     
-#     
-#     
-#     # if multiple transactions were done on the same day we need to keep only the last one
-#     portfolio = portfolio[, .SD[nrow(.SD)], by = .(symbol, date)]
-#     
-#     # go wide, one column per stock
-#     portfolio = dcast(portfolio, formula = date~symbol, value.var = "amount_holding")
-#     
-#     # expand timeframe
-#     dates = data.table(date = seq(start_date,end_date, by = "days"))
-#     portfolio = merge(x = dates,
-#                       y = portfolio,
-#                       by = "date",
-#                       allow.cartesian = TRUE,
-#                       all.x = TRUE)
-#     
-#     # fill out NA 
-#     cols = names(portfolio)[-1]
-#     portfolio = portfolio[, (cols) := lapply(.SD, na.locf.0b), .SDcols = cols]
-#     
-#     # bring it back to long form
-#     portfolio = melt(portfolio,
-#                      id.vars = 'date',
-#                      variable.name = "symbol",
-#                      value.name = "amount_holding")
-#     
-# 
-#     
-#     
-#     
-#     
-#     # calculate portfolio position
-#     portfolio[, euro_position := amount_holding * price * rate]
-#     
-#     # sort output
-#     setorderv(portfolio, c("date","symbol"))
-#     portfolio_list[[broker]] = portfolio
-#   }
-#   
-#   return(portfolio_list)
-# }
 
 
 
