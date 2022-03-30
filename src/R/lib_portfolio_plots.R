@@ -44,32 +44,58 @@ plot_position_per_stock = function(pos_s) {
 #' @return
 plot_portfolio_evolution = function(broker, 
                                     pf_window, 
-                                    pos_sb_evol) {
+                                    pos_sb_evol,
+                                    cash_b_evol) {
   
   # filter by broker
   ppos = copy(pos_sb_evol)
+  cpos = copy(cash_b_evol)
   if (tolower(broker) != "all") {
     ppos = ppos[account == broker]
+    cpos = cpos[account == broker]
   } 
   
   # filter by time window
   w = window_to_start_end_dates(pf_window)
   ppos = ppos[date >= w$start & date <= w$end]
+  cpos = cpos[date >= w$start & date <= w$end]
   
-  # aggregate
-  ppos_plotdata = ppos[, .(portfolio = sum(position_euro)), by = .(date)][order(date)]
+  # # aggregate
+  # ppos_plotdata = ppos[, .(portfolio = sum(position_euro)), by = .(date)][order(date)]
+  # 
+  # # plot
+  # p = ggplotly(
+  #      ggplot(ppos_plotdata, 
+  #              aes(x=date, y=portfolio)) + 
+  #      geom_line() + 
+  #      labs(y = "Portfolio [EUR]") +     
+  #      scale_x_date(limits = c(w$start, w$end), 
+  #                   expand = c(0,0),
+  #                   date_breaks  = "1 month") +
+  #      theme(axis.text.x = element_text(angle = 90))
+  # )
+  
+  
+  # aggregate over all stocks per broker and date
+  ppos = ppos[, .(portfolio = sum(position_euro)), by = .(date, account)][order(date)]
+  pos = merge(ppos[, .(account, date, stocks = portfolio)], 
+              cpos[, .(account, date, cash = cash_position)], 
+              by = c("account", "date"))
+  posl = melt(pos, id.vars = c("account", "date"))
   
   # plot
   p = ggplotly(
-       ggplot(ppos_plotdata, 
-               aes(x=date, y=portfolio)) + 
-       geom_line() + 
-       labs(y = "Portfolio [EUR]") +     
-       scale_x_date(limits = c(w$start, w$end), 
-                    expand = c(0,0),
-                    date_breaks  = "1 month") +
-       theme(axis.text.x = element_text(angle = 90))
+    ggplot(posl[], 
+           aes(x=date, y=value, fill = account)) + 
+      geom_area(position = "stack", alpha = 0.7) +
+      facet_grid(rows = vars(variable), scales = "free") + 
+      labs(y = "[EUR]") +     
+      scale_x_date(limits = c(w$start, w$end), 
+                   expand = c(0,0),
+                   date_breaks  = "1 month") +
+      theme(axis.text.x = element_text(angle = 90))
   )
+  
   return(p)
 }
 

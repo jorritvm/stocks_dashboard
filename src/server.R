@@ -55,6 +55,10 @@ server = function(input, output, session) {
     extend_transactions_with_cumulative_data(tr())
   })
   
+  cash_b_evol = reactive({
+    get_cash_position_over_time_per_broker(tr_ext())
+  })
+  
   pos_sb_evol = reactive({
     get_stock_position_over_time_per_stock_and_broker(tr_ext(), 
                                                       ohlc_euro())
@@ -90,7 +94,8 @@ server = function(input, output, session) {
   output$portfolio_position = renderPlotly({
     plot_portfolio_evolution(input$pf_broker, 
                              input$pf_window, 
-                             pos_sb_evol() )
+                             pos_sb_evol(),
+                             cash_b_evol())
   })
   
   
