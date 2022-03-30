@@ -71,7 +71,8 @@ import_bolero_transaction_log = function(dt, ohlc) {
   dt_all[tolower(type) %like% 'verkoop', type := "sell"]
   dt_all[tolower(type) %like% 'aankoop', type := "buy"]
   dt_all[tolower(type) %like% 'ividend', type := "div"] # todo: distinguish dist & acc dividend?
-  dt_all[, amount := as.numeric(amount)]
+  dt_all[, amount := abs(as.numeric(amount))]
+  dt_all[, money := abs(money)]
   dt_all[, account := "bolero"]
   
   safe_write_transaction_data(dt_all)

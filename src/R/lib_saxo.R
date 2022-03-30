@@ -35,8 +35,10 @@ import_saxo_transaction_log = function(dt) {
   dt[tolower(type) %like% 'aankoop', type := "buy"]  
   dt[tolower(type) %like% 'ividend', type := "div"]  
   dt[amount == "-", amount := ""]
-  dt[, amount := as.numeric(amount)]
+  dt[, amount := abs(as.numeric(amount))]
+  dt[, money := abs(money)]
   dt[, account := "saxo"]
+
   
   safe_write_transaction_data(dt)
 }
@@ -64,19 +66,20 @@ safe_write_saxo_map = function(upload_saxo_yahoo_map) {
               saxo_yahoo_map_db, 
               by = c("saxo", "yahoo"))
   
-  # upload new entries to the db
-  dbAppendTable(con, "saxo_map", new_saxo_yahoo_items)
-  
+  if (nrow(new_saxo_yahoo_items) > 0) {
+    # upload new entries to the db
+    dbAppendTable(con, "saxo_map", new_saxo_yahoo_items)
+    
+    # make sure to also add the new stocks to the DB
+    for (i in 1:nrow(new_saxo_yahoo_items)) {
+      add_stock(new_saxo_yahoo_items[i, yahoo])
+    }
+  }
   # now that we have full collection in the DB we extract it again
   full_saxo_yahoo_map =  dbReadTable(con, "saxo_map")
   
   # close the DB connection
   dbDisconnect(con)  
-  
-  # make sure to also add the new stocks to the DB
-  for (i in 1:nrow(new_saxo_yahoo_items)) {
-    add_stock(new_saxo_yahoo_items[i, yahoo])
-  }
   
   # return the full set
   return(full_saxo_yahoo_map)
