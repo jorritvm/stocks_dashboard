@@ -12,7 +12,9 @@ fx = get_all_fx()
 ohlc_euro =  convert_ohlc_to_euro(ohlc, profiles, fx)
 
 
-pos_sb_evol = get_stock_position_over_time_per_stock_and_broker(tr, ohlc_euro)
+tr_ext = extend_transactions_with_cumulative_data(tr)
+
+pos_sb_evol = get_stock_position_over_time_per_stock_and_broker(tr_ext, ohlc_euro)
 pos_sb = get_current_position_per_stock_and_broker(pos_sb_evol)
 
 pos_sb_evol_subset = get_one_stock_evolution("ABI.BR | Anheuser-Busch InBev SA/NV",

@@ -1,7 +1,90 @@
+#' extend transactions datatable with cumulative data on amount holding and cash position
+#'
+#' @param tr 
+#'
+#' @return a data.table with structure:
+#'         - symbol: character
+#'         - date: Date
+#'         - type: character
+#'         - amount: numeric
+#'         - money: numeric
+#'         - account: character
+#'         - cash_delta: numeric
+#'         - cash_position: numeric
+#'         - amount_delta: numeric
+#'         - amount_holding: numeric
+#' @export
+extend_transactions_with_cumulative_data = function(tr) {
+  
+  brokers = unique(tr$account)
+  tr_ext_list = list()
+  
+  for (broker in brokers) {
+    trb = tr[account == broker][order(date)]
+    
+    # establish cash position evolution
+    trb[, cash_delta := 0]
+    trb[type %in% c('cash_in' , 'sell', 'div'), cash_delta :=  1 * abs(money)]
+    trb[type %in% c('cash_out', 'buy')       ,  cash_delta := -1 * abs(money)]
+    trb[, cash_position := cumsum(cash_delta)]
+    
+    # establish the amount holding evolution
+    trb[, amount_delta := 0]
+    trb[type %in% c('transfer_in',  'buy') , amount_delta :=  1 * abs(amount)]
+    trb[type %in% c('transfer_out', 'sell'), amount_delta := -1 * abs(amount)]
+    trb[, amount_holding := cumsum(amount_delta), by = symbol]
+    
+    tr_ext_list[[broker]] = trb
+  }
+  tr_ext = rbindlist(tr_ext_list)
+  return(tr_ext)
+}
+
+
+#' returns the evolution over time of the cash position per broker in euro
+#'
+#' @param tr_ext 
+#'
+#' @return
+#' @export
+get_cash_position_over_time_per_broker = function(tr_ext) {
+  
+  brokers = unique(tr_ext$account)
+  cash_position_list = list()
+
+  for (broker in brokers) {
+    cash = tr_ext[account == broker][order(date)]
+    
+    # filter to positions that have impacted cash position
+    cash = cash[abs(cash_delta) > 0]
+    
+    # if multiple transactions were done on the same day we need to keep only the last one
+    cash = cash[, .SD[nrow(.SD)], by = .(date)]
+    
+    # expand timeframe
+    start_date = min(tr_ext$date)
+    end_date = today()
+    dates = data.table(date = seq(start_date, end_date, by = "days"))
+    cp = merge(
+      x = dates,
+      y = cash[, .(date, cash_position)],
+      by = "date",
+      all.x = TRUE
+    )
+    
+    # fill out NA
+    cp[, cash_position := na.locf.0b(cash_position)]
+    
+    cash_position_list[[broker]] = cp
+  }
+  cash_position = rbindlist(cash_position_list, idcol = "account")
+}
+  
+
 #' returns the evolution over time of every stock per broker in euro
 #'
-#' @param tr transactions table
 #' @param ohlc_euro ohlc table in euro
+#' @param tr_ext extended transactions table
 #'
 #' @return a data.table with structure:
 #'         - account: character
@@ -11,32 +94,30 @@
 #'         - price: numeric
 #'         - position_euro: numeric
 #' @export
-get_stock_position_over_time_per_stock_and_broker = function(tr, 
+get_stock_position_over_time_per_stock_and_broker = function(tr_ext, 
                                                              ohlc_euro) {
-  tr = tr[order(date)]
   
-  start_date = min(tr$date)
+  # extend tr with cumulative data
+  start_date = min(tr_ext$date)
   end_date = today()
   
-  brokers = unique(tr$account)
+  brokers = unique(tr_ext$account)
   portfolio_list = list()
   for (broker in brokers) {
-    trb = tr[account == broker]
-    trb[type == 'sell',         amount := -1 * abs(amount)]
-    trb[type == 'transfer_out', amount := -1 * abs(amount)]
+    pf = tr_ext[account == broker][order(date)]
     
-    # get cumulative position from transactions
-    pf = trb[type %in% c("buy", "sell", "transfer_in", "transfer_out")]
-    pf = pf[, amount_holding := cumsum(amount), by = symbol]
-    pf = pf[, .(symbol, date, amount_holding)]
+    # filter to positions that have impacted cash position
+    pf = pf[abs(amount_delta) > 0]
     
-    # if multiple transactions were done on the same day we need to keep only the last cumsum row
-    pf = pf[, .SD[nrow(.SD)], by = .(symbol, date)]
+    # if multiple transactions were done on the same day we need to keep only the last one
+    pf = pf[, .SD[nrow(.SD)], by = .(date, symbol)]
     
     # go wide, one column per stock
     pf = dcast(pf, formula = date ~ symbol, value.var = "amount_holding")
     
     # expand timeframe
+    start_date = min(tr_ext$date)
+    end_date = today()
     dates = data.table(date = seq(start_date, end_date, by = "days"))
     pf = merge(
       x = dates,

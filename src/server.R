@@ -51,8 +51,12 @@ server = function(input, output, session) {
                     checkFunc = get_count_transactions,
                     valueFunc = get_transactions)
   
+  tr_ext = reactive({
+    extend_transactions_with_cumulative_data(tr())
+  })
+  
   pos_sb_evol = reactive({
-    get_stock_position_over_time_per_stock_and_broker(tr(), 
+    get_stock_position_over_time_per_stock_and_broker(tr_ext(), 
                                                       ohlc_euro())
   })
 
