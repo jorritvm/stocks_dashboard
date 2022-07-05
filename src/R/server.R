@@ -229,27 +229,44 @@ server = function(input, output, session) {
   ### PAGE: batch upload transactions
   # handle file upload
   observeEvent(input$batch_portfolio_file, {
-    req(input$batch_portfolio_file)
-
-    # inform user that upload has started
-    id = notify("Upload started.")
-    on.exit(removeNotification(id), add = TRUE)
-
-    # read and determine type of upload file
-    dt = as.data.table(read.xlsx(input$batch_portfolio_file$datapath))
-    file_source = check_for_transaction_file_type(dt)
-
-    # parse upload file
-    if (file_source == "saxo") {
-      import_saxo_transaction_log(dt)
-    }
-    if (file_source == "bolero") {
-      import_bolero_transaction_log(dt, ohlc())
-    }
-    
-    # inform user that the upload has finished 
     notify("Upload finished.", 10)
   })
+  
+  observeEvent(input$batch_portfolio_btn, {
+    req(input$batch_portfolio_file)
+    # we inform the user he has to update OHLC first!
+    shinyalert(
+     "Reminder!",
+     text = "Don't forget to update OHLC data before uploading a bolero dataset \n Continue?",
+     type = "warning",
+     showCancelButton = TRUE,
+     inputId = "confirm_before_bolero"
+    )
+  })
+  
+  observeEvent(input$confirm_before_bolero, {
+    if (input$confirm_before_bolero) {
+      # inform user that upload has started
+      id = notify("Upload started.")
+      on.exit(removeNotification(id), add = TRUE)
+      
+      # read and determine type of upload file
+      dt = as.data.table(read.xlsx(input$batch_portfolio_file$datapath))
+      file_source = check_for_transaction_file_type(dt)
+      
+      # parse upload file
+      if (file_source == "saxo") {
+        import_saxo_transaction_log(dt)
+      }
+      if (file_source == "bolero") {
+        import_bolero_transaction_log(dt, ohlc())
+      }
+      
+      # inform user that the upload has finished 
+      notify("Batch upload file processed")
+    }
+  })
+ 
 
 
 ################################################################

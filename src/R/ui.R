@@ -15,7 +15,8 @@ sidebar = dashboardSidebar(
     menuItem("Portfolio", tabName = "portfolio", icon = icon("chart-pie")),
     menuItem("Currencies", tabName = "currencies", icon = icon("coins")),
     menuItem("Stocks", tabName = "stocks", icon = icon("chart-bar")),
-    menuItem("About", tabName = "about", icon = icon("info"))
+    menuItem("About", tabName = "about", icon = icon("info")) #,
+    # actionButton("debug", "debug1")
   )
 )
 

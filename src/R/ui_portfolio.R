@@ -67,6 +67,9 @@ tab_portfolio = tabItem(
             ".xlsx"
           )
         ),
+        actionButton(
+          "batch_portfolio_btn", 
+          "Process uploaded file"),
         title = "Upload"
       )
     )
