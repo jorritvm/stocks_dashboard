@@ -1,8 +1,20 @@
 server = function(input, output, session) {
-  
+
 ################################################################
 # general
 ################################################################
+  ### AUTHENTICATION
+  res_auth <- secure_server(
+    check_credentials = check_credentials(credentials)
+  )
+  res_auth <- secure_server(
+    check_credentials = check_credentials(
+      normalizePath("../db/credentials.sqlite"),
+      passphrase = key_get("R-shinymanager-key", NULL)
+    )
+  )
+  
+  
   ### NOTIFICATIONS
   output$notif_menu <- renderMenu({
     dropdownMenu(type = "notifications", icon = icon("info"), .list = rv$msgs)
