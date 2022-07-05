@@ -45,7 +45,7 @@ get_ohlc_from_api = function(symbol, start_date, end_date) {
     dt_ohlc = dt_ohlc[ seq( max(which(!is.na(dt_ohlc$Close))) ) ]
     
     # fill NA with last observation
-    dt_ohlc = na.locf(dt_ohlc) 
+    dt_ohlc = copy(na.locf(dt_ohlc))
   }
   
   # add symbol info
@@ -324,7 +324,7 @@ update_all_ohlc = function(ohlc) {
         new_ohlc_data = new_ohlc_data[, .SD[1], by = .(symbol, date)]
         
         # write the record  
-        dbAppendTable(con, "stock_ohlc", new_ohlc_data)
+        #dbAppendTable(con, "stock_ohlc", new_ohlc_data)
       }
     }
   }
