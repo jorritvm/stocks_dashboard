@@ -1,6 +1,3 @@
-options(shiny.maxRequestSize = 30 * 1024 ^ 2) # 30 MB
-reactlog_enable()
-
 server = function(input, output, session) {
   
 ################################################################
