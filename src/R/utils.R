@@ -2,6 +2,31 @@
 # NEW
 ##########################
 
+#' returns amount of records in a db table 
+#' 
+#' cheap function used to check if the datatable was changed and hook up to reactivePoll
+#'
+#' @param table 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_count_table = function(table) {
+  # open the db connection
+  db_fpfn = get_db_location()
+  con <- dbConnect(RSQLite::SQLite(), db_fpfn)
+  
+  sql = paste0("SELECT count(*) FROM ", table)
+  n = dbGetQuery(con, sql)[1,1]
+  
+  # close
+  dbDisconnect(con)  
+  
+  return(n)
+}
+
+
 standardize = function(x) {
   return((x-min(x))/(max(x)-min(x)))
 }
@@ -20,9 +45,9 @@ window_to_start_end_dates = function(window) {
   if (window == "3Y") start = today() - years(3)
   if (window == "2Y") start = today() - years(2)
   if (window == "1Y") start = today() - years(1)
-  if (window == "6M") start = today() - months(6)
-  if (window == "3M") start = today() - months(3)
-  if (window == "1M") start = today() - months(1)
+  if (window == "6M") start = as.Date(today() - dmonths(6))
+  if (window == "3M") start = as.Date(today() - dmonths(3))
+  if (window == "1M") start = as.Date(today() - dmonths(1))
   if (window == "2W") start = today() - weeks(2)
   if (window == "1W") start = today() - weeks(1)
   if (window == "YTD") start = ymd(paste0(year(today()), "-01-01"))
