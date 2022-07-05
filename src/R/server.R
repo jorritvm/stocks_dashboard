@@ -50,14 +50,14 @@ server = function(input, output, session) {
   output$vb_total_stocks = renderValueBox(valueBox(
     round(sum(pos_sb()$position_euro), 2),
     "Total stocks",
-    icon = icon("euro"),
+    icon = icon("euro-sign"),
     color = "green",
     width = 6
   ))
   output$vb_total_cash = renderValueBox(valueBox(
     round(cash_b_evol()[order(-date)][, .SD[1], by = account][, sum(cash_position)],2),
     "Total cash",
-    icon = icon("euro"),
+    icon = icon("euro-sign"),
     color = "green",
     width = 6
   ))
@@ -116,14 +116,14 @@ server = function(input, output, session) {
   output$latest_ohlc_update = renderValueBox(valueBox(
     max(ohlc()$date),
     "Latest OHLC update",
-    icon = icon("refresh"),
+    icon = icon("fas fa-sync"),
     color = "navy",
     width = 6
   ))
   output$latest_fx_update = renderValueBox(valueBox(
     max(fx()$date),
     "Latest FX update",
-    icon = icon("refresh"),
+    icon = icon("sync"),
     color = "navy",
     width = 6
   ))

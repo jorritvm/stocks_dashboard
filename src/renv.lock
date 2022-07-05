@@ -91,6 +91,35 @@
         "zoo"
       ]
     },
+    "R.methodsS3": {
+      "Package": "R.methodsS3",
+      "Version": "1.8.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "278c286fd6e9e75d0c2e8f731ea445c8",
+      "Requirements": []
+    },
+    "R.oo": {
+      "Package": "R.oo",
+      "Version": "1.25.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "a0900a114f4f0194cf4aa8cd4a700681",
+      "Requirements": [
+        "R.methodsS3"
+      ]
+    },
+    "R.utils": {
+      "Package": "R.utils",
+      "Version": "2.12.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "d31333e10f14027e1cbbc6f266512806",
+      "Requirements": [
+        "R.methodsS3",
+        "R.oo"
+      ]
+    },
     "R6": {
       "Package": "R6",
       "Version": "2.5.0",
@@ -226,6 +255,23 @@
       "Repository": "CRAN",
       "Hash": "543776ae6848fde2f48ff3816d0628bc",
       "Requirements": []
+    },
+    "billboarder": {
+      "Package": "billboarder",
+      "Version": "0.3.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "0177b70810cfa18bbc4b619dd576b7b0",
+      "Requirements": [
+        "ggplot2",
+        "htmltools",
+        "htmlwidgets",
+        "jsonlite",
+        "magrittr",
+        "rlang",
+        "scales",
+        "shiny"
+      ]
     },
     "bit": {
       "Package": "bit",
@@ -1318,6 +1364,16 @@
         "viridisLite"
       ]
     },
+    "scrypt": {
+      "Package": "scrypt",
+      "Version": "0.1.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "a1d1dfd8769a6cda6087b55430b1a901",
+      "Requirements": [
+        "Rcpp"
+      ]
+    },
     "shiny": {
       "Package": "shiny",
       "Version": "1.7.1",
@@ -1356,6 +1412,30 @@
       "Requirements": [
         "htmltools",
         "promises",
+        "shiny"
+      ]
+    },
+    "shinymanager": {
+      "Package": "shinymanager",
+      "Version": "1.0.410",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "datastorm-open",
+      "RemoteRepo": "shinymanager",
+      "RemoteRef": "master",
+      "RemoteSha": "ca8322dd1e67468a07b58c4498be40e03ea7c14b",
+      "Hash": "7e360f288a6cc52752aa7381ff4ed080",
+      "Requirements": [
+        "DBI",
+        "DT",
+        "R.utils",
+        "R6",
+        "RSQLite",
+        "billboarder",
+        "htmltools",
+        "openssl",
+        "scrypt",
         "shiny"
       ]
     },
