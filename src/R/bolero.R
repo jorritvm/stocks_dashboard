@@ -23,6 +23,7 @@ import_bolero_transaction_log = function(dt, ohlc) {
   dt[Details %like% "Aankoop", Event := "Aankoop"]
   dt[Details %like% "Verkoop", Event := "Verkoop"]
   dt[Details %like% "Provisionering|Terugstorting", Event := "cash_in"]
+  dt[Details %like% "Overschrijving naar klant", Event := "cash_out"]
   
   if (any(is.na(dt$Event))) { print(dt) ; stop("Your bolero upload contains an unknown event") }
   
@@ -40,12 +41,17 @@ import_bolero_transaction_log = function(dt, ohlc) {
   
   if (any(is.na(dt_s$yahoo))) { print(dt_s) ; stop("Your bolero upload contains new stocks that need a RIC mapping - complete the symbol column in the upload") }
   
-  # bolero does not provide 'amount' so we have to guess it from the ohlc data!
-  # if you made a transaction today, value date is in the future, so you wont have OHLC data, 
-  # so we use todays close as future price estimate
+  # bolero does not provide 'amount' so we have to guess it from the ohlc data
+  # we use the days' middle price of the day
   mean_ohlc = ohlc %>% 
             mutate(price = (high + low) /2) %>%
             select(symbol, date, price)
+  # if you made a transaction today, value date is in the future, so you wont have OHLC data, 
+  # so we use the days' median price as price estimate
+  mean_ohlc = pad(mean_ohlc, 
+          end_val = max(dt_s$date), 
+          group = "symbol")
+  mean_ohlc[, price := na.locf.cb(price), by = symbol]
   
   dt_s = dt_s %>% 
     left_join(mean_ohlc, by = c("yahoo" = "symbol", "date")) %>%
@@ -57,7 +63,7 @@ import_bolero_transaction_log = function(dt, ohlc) {
                   amount = Aantal,
                   money = Waarde)]
                   
-  # subset rows for  cash operations
+  # subset rows for cash operations
   dt_c = dt[Event %in% c("cash_in", "cash_out")]
   dt_c = dt_c[, .(symbol, 
                   date, 
