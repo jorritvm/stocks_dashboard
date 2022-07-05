@@ -19,25 +19,43 @@
 #'         - adjusted: numeric
 #' @export
 get_ohlc_from_api = function(symbol, start_date, end_date) {
+  empty = data.table(
+    symbol = character(),
+    date = Date(),
+    open = numeric(),
+    high = numeric(),
+    low = numeric(),
+    close = numeric(),
+    volume = numeric(),
+    adjusted = numeric()
+  )
+  
   # symbol always upper case
   symbol = toupper(symbol)
   
-  # query the yahoo api for OHlC data
-  query_result = getSymbols(Symbols = symbol, 
-                            auto.assign = FALSE)
-  names(query_result) = str_replace(names(query_result), paste0(symbol,"."), "")
-  
-  # subset the result
-  subset_string = paste0(as.character(start_date), "/", as.character(end_date))
-  query_result = query_result[subset_string]
-  
-  # convert to data table
-  dt_ohlc = as.data.table(query_result)
-  setnames(dt_ohlc, "index", "date")
+  dt_ohlc = tryCatch( {
+    # query the yahoo api for OHlC data
+    query_result = NULL
+    query_result = getSymbols(Symbols = symbol, auto.assign = FALSE)
+    
+    names(query_result) = str_replace(names(query_result), paste0(symbol,"."), "")
+    
+    # subset the result
+    subset_string = paste0(as.character(start_date), "/", as.character(end_date))
+    query_result = query_result[subset_string]
+    
+    # convert to data table
+    dt_ohlc = as.data.table(query_result)
+    setnames(dt_ohlc, "index", "date")
+    },
+    error = function(cond) {
+      return(empty)
+    }
+  )
   
   # if all rows are just NA make table empty
   if (sum(complete.cases(dt_ohlc)) == 0) {
-    dt_ohlc = dt_ohlc[0]  
+    dt_ohlc = dt_ohlc[0] # empty
   }
   
   if (nrow(dt_ohlc) > 0) {
@@ -150,7 +168,7 @@ convert_ohlc_to_euro = function(ohlc, profiles, fx) {
 #'         - adjusted: numeric
 #' @export
 get_latest_close = function(ohlc) {
-  result = ohlc[order(-date)][, .SD[1], by = symbol]
+  result = ohlc[order(-date)][, .SD[1], by = symbol][order(symbol)]
   return(result)
 }
 
@@ -324,7 +342,7 @@ update_all_ohlc = function(ohlc) {
         new_ohlc_data = new_ohlc_data[, .SD[1], by = .(symbol, date)]
         
         # write the record  
-        #dbAppendTable(con, "stock_ohlc", new_ohlc_data)
+        dbAppendTable(con, "stock_ohlc", new_ohlc_data)
       }
     }
   }
