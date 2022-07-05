@@ -1,6 +1,7 @@
 # USER DEFINED
 /db/*
 /private/*
+~$*
 
 # History files
 .Rhistory
