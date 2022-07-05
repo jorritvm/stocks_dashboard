@@ -1,7 +1,8 @@
+source("R/ui_generic.R")
+
 source("R/ui_about.R")
 source("R/ui_currencies.R")
 source("R/ui_dashboard.R")
-source("R/ui_generic.R")
 source("R/ui_portfolio.R")
 source("R/ui_stocks.R")
 
