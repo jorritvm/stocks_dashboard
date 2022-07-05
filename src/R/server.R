@@ -487,7 +487,7 @@ server = function(input, output, session) {
     update_all_ohlc(ohlc())
 
     # inform user that we have finished the batch update
-    notify("FX data updated for all currencies in the DB.", 10)
+    notify("Stock OHLC data updated for all currencies in the DB.", 10)
 
   })
 
