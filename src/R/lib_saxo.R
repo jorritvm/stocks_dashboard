@@ -11,19 +11,23 @@
 import_saxo_transaction_log = function(dt) {
   
   # fix types
-  dt[, date := ymd(numeric_date_to_iso8601(Transactiedatum))]
+  if (class(dt$Transactiedatum) == "numeric") {
+    dt[, date := ymd(numeric_date_to_iso8601(Transactiedatum))] 
+  } else if (class(dt$Transactiedatum) == "character") {
+    dt[, date := dmy(Transactiedatum)] 
+  }
   dt[, `Instrument-Id` := as.character(`Instrument-Id`)]
   
   # fix symbol
-  if (!"symbol" %in% names(dt)) dt[, symbol := NA]
+  if (!"symbol" %in% names(dt)) dt[, symbol := character()]
   
   upload_saxo_yahoo_map = unique(dt[!is.na(symbol), .(saxo = `Instrument-Id`, yahoo = symbol)])
   full_saxo_yahoo_map = safe_write_saxo_map(upload_saxo_yahoo_map)
   dt = dt %>% left_join(full_saxo_yahoo_map, by = c("Instrument-Id" = "saxo"))
   
   # filter rows
-  keep_these_types = c("Verkoop","Aankoop","Cashdividend","Herbeleggingsdividend")
-  dt = dt[Event %in% keep_these_types]
+  keep_these_types = c("Verkoop","Sell","Aankoop","buy","Cashdividend","Herbeleggingsdividend")
+  dt = dt[tolower(Event) %in% tolower(keep_these_types)]
   
   # filter columns & set proper names
   dt = dt[, .(symbol = yahoo, 
@@ -32,7 +36,9 @@ import_saxo_transaction_log = function(dt) {
                amount = Aantal,
                money = `Geboekt.bedrag.rekeningvaluta`)]
   dt[tolower(type) %like% 'verkoop', type := "sell"]  
-  dt[tolower(type) %like% 'aankoop', type := "buy"]  
+  dt[tolower(type) %like% 'sell', type := "sell"]  
+  dt[tolower(type) %like% 'aankoop', type := "buy"]
+  dt[tolower(type) %like% 'buy', type := "buy"]  
   dt[tolower(type) %like% 'ividend', type := "div"]  
   dt[amount == "-", amount := ""]
   dt[, amount := abs(as.numeric(amount))]
