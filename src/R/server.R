@@ -7,7 +7,7 @@ server = function(input, output, session) {
   res_auth <- secure_server(
     check_credentials = check_credentials(
       normalizePath("../db/credentials.sqlite"),
-      passphrase = key_get("R-shinymanager-key", NULL)
+      passphrase = key_get("R_stock_dashboard_shinymanager-key", NULL)
     )
   )
   

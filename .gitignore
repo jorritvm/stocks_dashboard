@@ -1,7 +1,8 @@
 # USER DEFINED
-/db/*
-/private/*
+db/*
+private/*
 ~$*
+scripts/credentials.env
 
 # History files
 .Rhistory
