@@ -18,6 +18,6 @@ options(shiny.maxRequestSize = 30 * 1024 ^ 2) # 30 MB
 reactlog_enable()
 
 options = list(host = "0.0.0.0", port = 9999)
-ui <- secure_app(ui, enable_admin = FALSE) # activate when running live
+# ui <- secure_app(ui, enable_admin = FALSE) # activate when running live
 shinyApp(ui = ui, server = server, options = options)
 
