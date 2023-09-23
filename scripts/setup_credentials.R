@@ -1,3 +1,10 @@
+#######################################
+#
+# This setup script will generate the 
+# files required for authentication
+#
+#######################################
+
 library(here)
 library(dotenv)
 library(keyring)

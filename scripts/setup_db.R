@@ -1,3 +1,11 @@
+#######################################
+#
+# This setup script will generate the 
+# database file with the correct schemas
+#
+#######################################
+
+
 #' initialises empty db file
 #'
 #' @return
