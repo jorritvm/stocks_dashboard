@@ -16,20 +16,20 @@ This is a hobby project to get familiar with
 ## Features & screenshots
 The tool can list currencies exchange rates:
 
-<img src="image/forex.png" width="750"> 
+<img src="doc/screenshots/forex.png" width="750"> 
 
 The tool also contains profile & OHLC data for desired stocks:
 
-<img src="image/profile.png" width="750"> 
+<img src="doc/screenshots/profile.png" width="750"> 
 
 The tool can plot stock OHLC data in a candlestick chart.
 
-<img src="image/candlestick.png" width="750"> 
+<img src="doc/screenshots/candlestick.png" width="750"> 
 
 The tool can benchmark one stocks performance to another over various timeframes.
 
-<img src="image/benchmark.png" width="750"> 
+<img src="doc/screenshots/benchmark.png" width="750"> 
 
 The tool can show your market timing visually.
 
-<img src="image/timings.png" width="750"> 
+<img src="doc/screenshots/timings.png" width="750"> 
