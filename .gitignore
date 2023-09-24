@@ -1,6 +1,7 @@
 # USER DEFINED
 db/*
 private/*
+**/private/*
 ~$*
 scripts/credentials.env
 src/config.env

@@ -44,7 +44,13 @@ get_transactions = function() {
 #' safely write a transaction data to the DB, if part of the transactions already exist
 #' it first deletes the old info, then adds the new data, in order to avoid duplicates
 #'
-#' @param new_tr data.table containing symbol, date, type, amount, money columns
+#' @param new_tr a data.table with structure:
+#'         - symbol: character
+#'         - date: Date
+#'         - type: character
+#'         - amount: numeric
+#'         - money: numeric
+#'         - account: character
 #'
 #' @return
 #' @export

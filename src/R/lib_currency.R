@@ -10,9 +10,12 @@ get_count_fx = function() {
 }
 
 
-#' returns FX data for all symbol(s)
+#' returns FX data for all symbol(s), converts date TEXT to Date objects
 #'
-#' @return data.table
+#' @return a data.table with structure:
+#'         - fx: character
+#'         - date: Date
+#'         - rate: numeric
 #' @export
 get_all_fx = function() {
   # open the db connection

@@ -174,7 +174,8 @@ init_transactions_table = function() {
   type	TEXT,
   amount	REAL,
   money REAL,
-  account TEXT
+  account TEXT,
+  PRIMARY KEY("symbol","date","account","money","amount","type")
 );'
   
   db_fpfn = get_db_location()

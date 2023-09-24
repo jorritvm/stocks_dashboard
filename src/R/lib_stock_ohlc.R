@@ -79,7 +79,7 @@ get_ohlc_from_api = function(symbol, start_date, end_date) {
 #' 
 #' cheap function used to check if the datatable was changed and hook up to reactivePoll
 #'
-#' @return
+#' @return numeric
 #' @export
 get_count_ohlc = function() {
   n = get_count_table("stock_ohlc")
@@ -116,7 +116,7 @@ get_all_ohlc = function() {
 }
 
 
-#' extend OHLC table with closing price in euros
+#' extend OHLC table with all prices in euros
 #'
 #' @param ohlc 
 #' @param profiles 
@@ -131,7 +131,6 @@ get_all_ohlc = function() {
 #'         - close: numeric
 #'         - volume: numeric
 #'         - adjusted: numeric
-#'         - close_in_euro: numeric
 convert_ohlc_to_euro = function(ohlc, profiles, fx) {
   # get the currency and put equivalent closing value in euro
   ohlc_euro = ohlc %>% 
@@ -214,7 +213,7 @@ get_ohlc = function(ohlc, sym, start_date = NULL, end_date = NULL) {
 #' @param add_symbol yahoo symbol
 #' @param region region US or EU, default NULL
 #'
-#' @return
+#' @return /
 #' @export
 add_stock = function(add_symbol, region = NULL) {
   # make sure it does not exist in our DB
@@ -239,7 +238,7 @@ add_stock = function(add_symbol, region = NULL) {
 #'
 #' @param ohlc data.table
 #'
-#' @return
+#' @return /
 #' @export
 safe_write_ohlc_data = function(ohlc) {
   # open the db connection
@@ -283,13 +282,20 @@ safe_write_ohlc_data = function(ohlc) {
 #'
 #' @param key_to_remove string "symbol | company"
 #'
-#' @return
+#' @return /
 #' @export
 remove_stock_from_db = function(key_to_remove) {
   symbol = key_to_symbol(key_to_remove)
   remove_stock_from_db_by_symbol(symbol)
 }
 
+
+#' deletes OHLC and PROFILE data from DB for a given stock symbol
+#'
+#' @param symbol 
+#'
+#' @return /
+#' @export
 remove_stock_from_db_by_symbol = function(symbol) {
   # open the db connection
   db_fpfn = get_db_location()

@@ -47,7 +47,7 @@ extend_transactions_with_cumulative_data = function(tr) {
       } else {
         trb_s = trb[symbol == stock]
       
-        map = 0 
+        map = 0 # map = mean acquire price
         for (j in 1:nrow(trb_s)) {
           if (trb_s[j, type] %in% c("buy", "transfer_in")) {
             previously_holding = trb_s[j, amount_holding] - trb_s[j, amount_delta]
