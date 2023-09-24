@@ -56,9 +56,15 @@ plot_fx = function(fx_table, fx_symbol, window) {
   w = window_to_start_end_dates(window)
   
   # get fx data for this symbol and this window
+  if (is.null(w$start)) {
+    data =  fx_table %>% 
+      filter(fx == fx_symbol) %>%
+      arrange(date)  
+  } else {
   data =  fx_table %>% 
     filter(fx == fx_symbol, date >= w$start, date <= w$end) %>%
     arrange(date)
+  }
   
   # plotly
   fig <-
