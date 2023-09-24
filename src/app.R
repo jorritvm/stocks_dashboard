@@ -17,7 +17,18 @@ source("R/lib_utils.R")
 options(shiny.maxRequestSize = 30 * 1024 ^ 2) # 30 MB
 reactlog_enable()
 
-options = list(host = "0.0.0.0", port = 9999)
+# load host and port from ENV variables 
+fpfn_env = here("config.env")
+if (file.exists(fpfn_env)) {
+  dotenv::load_dot_env(fpfn_env)
+}
+h = Sys.getenv("r_stock_dashboard_host")
+p = as.numeric(Sys.getenv("r_stock_dashboard_port"))
+options = list(host = h, port = p)
+
+# secure the server
 ui <- secure_app(ui, enable_admin = TRUE) # activate when running live
+
+# run the server
 shinyApp(ui = ui, server = server, options = options)
 

@@ -547,6 +547,14 @@
       "Hash": "b18a9cf3c003977b0cc49d5e76ebe48d",
       "Requirements": []
     },
+    "dotenv": {
+      "Package": "dotenv",
+      "Version": "1.0.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "7e1213a65b6190437c644a14ec814ef3",
+      "Requirements": []
+    },
     "dplyr": {
       "Package": "dplyr",
       "Version": "1.1.2",
@@ -1016,6 +1024,7 @@
         "class",
         "nnet",
         "prodlim",
+        "rpart",
         "survival"
       ]
     },
@@ -1667,6 +1676,14 @@
         "xfun",
         "yaml"
       ]
+    },
+    "rpart": {
+      "Package": "rpart",
+      "Version": "4.1.19",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "b3c892a81783376cc2204af0f5805a80",
+      "Requirements": []
     },
     "rprojroot": {
       "Package": "rprojroot",

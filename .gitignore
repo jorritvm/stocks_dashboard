@@ -3,6 +3,7 @@ db/*
 private/*
 ~$*
 scripts/credentials.env
+src/config.env
 
 # History files
 .Rhistory
