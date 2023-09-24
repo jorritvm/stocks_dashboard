@@ -89,7 +89,7 @@ plot_fx = function(fx_table, fx_symbol, window) {
 #' @param fx string for FX separated by '/', e.g. USD/EUR
 #' @param start_date date object 
 #'
-#' @return a data.table containing the OHLC information of a stock 
+#' @return a data.table containing the FX information
 #' @export
 get_fx_from_api = function(fx, start_date) {
   # fx

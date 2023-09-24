@@ -7,8 +7,10 @@
 
 library(lubridate)
 library(here)
+library(padr)
 source(here("R/lib_currency.R"))
 source(here("R/lib_utils.R"))
+
 
 # set wd to this current folder 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) 
@@ -38,7 +40,13 @@ for (forex in forex_list) {
   # read and clean
   dt = fread(path)
   dt[, date := ymd(Time)]
-  dt = dt[, .(fx = fxvalue, date,  rate = Close)]
+  dt = dt[, .(date,  rate = Close)]
+  
+  # make sure we have an equidistant dataframe and NA are filled using LOCF
+  dt = pad(dt, interval = "day")
+  dt[, rate := na.locf(rate)]
+  dt[, fx := fxvalue]
+  setcolorder(dt, c("fx", "date", "rate"))
 
   # import to db
   safe_write_fx_data (dt)
