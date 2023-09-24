@@ -115,11 +115,16 @@ get_fx_from_api = function(fx, start_date) {
 #' safely write a fxdata to the DB, if part of the fx history already exists
 #' it first deletes the old info, then adds the new data, in order to avoid duplicates
 #'
-#' @param fx data.table containing fx, date, rate columns
+#' @param fx data.table with structure:
+#'         - fx: character -> only a single fx can be in this data table
+#'         - date: Date
+#'         - rate: numeric
 #'
 #' @return
 #' @export
 safe_write_fx_data = function(dt_fx) {
+  dt_fx = copy(dt_fx)
+               
   # open the db connection
   db_fpfn = get_db_location()
   con <- dbConnect(RSQLite::SQLite(), db_fpfn)
