@@ -84,10 +84,12 @@ safe_write_transaction_data = function(new_tr) {
 #' @return a string stating the 'source of the input file' e.g. 'bolero' or 'saxo'
 #' @export
 check_for_transaction_file_type = function(dt) {
-  if (names(dt)[1] == "Transactiedatum") {
+  if (names(dt)[1] == "Gebruikersnaam") {
     file_type = "saxo"
   } else if (names(dt)[1] == "Datum") {
     file_type = "bolero"
+  } else {
+    stop("Upload file type unknown.")  
   }
   return(file_type)
 }

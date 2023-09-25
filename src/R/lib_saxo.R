@@ -1,6 +1,6 @@
 # dt = as.data.table(read.xlsx(file.choose()))
 
-#' imports saxo transaction log into datbase
+#' imports saxo transaction log into database
 #'
 #' @param dt 
 #'
@@ -8,7 +8,7 @@
 #' @export
 #'
 #' @examples
-import_saxo_transaction_log = function(dt) {
+import_saxo_transaction_log = function(dt, account_id) {
   
   # fix types
   if (class(dt$Transactiedatum) == "numeric") {
@@ -16,36 +16,56 @@ import_saxo_transaction_log = function(dt) {
   } else if (class(dt$Transactiedatum) == "character") {
     dt[, date := dmy(Transactiedatum)] 
   }
-  dt[, `Instrument-Id` := as.character(`Instrument-Id`)]
   
-  # fix symbol
+  # add RIC symbol to the records of this dataset
   if (!"symbol" %in% names(dt)) dt[, symbol := character()]
   
-  upload_saxo_yahoo_map = unique(dt[!is.na(symbol), .(saxo = `Instrument-Id`, yahoo = symbol)])
-  full_saxo_yahoo_map = safe_write_saxo_map(upload_saxo_yahoo_map)
-  dt = dt %>% left_join(full_saxo_yahoo_map, by = c("Instrument-Id" = "saxo"))
+  new_saxo_yahoo_map = unique(dt[!is.na(symbol), .(saxo = `Instrumentsymbool`, yahoo = symbol)])
+  full_saxo_yahoo_map = safe_write_saxo_map(new_saxo_yahoo_map)
+  dt = dt %>% left_join(full_saxo_yahoo_map, by = c("Instrumentsymbool" = "saxo"))
   
-  # filter rows
-  keep_these_types = c("Verkoop","Sell","Aankoop","buy","Cashdividend","Herbeleggingsdividend")
-  dt = dt[tolower(Event) %in% tolower(keep_these_types)]
+  # map 'Acties' to relevant transaction types
+  # currently ignored
+  # - corporate actions - bronbelastirng
+  # - aandelensplitsing
+  # - debetrente
+  # - fusie
+  # - Roerende voorheffing (Rente)
+  # - rente
+  # - waardevermindering
+  
+  dt[, type := ""]
+  dt[tolower(Acties) %like% 'ividend', type := "div"] # cashdividend / herbeleggingsdividend
+  dt[tolower(Acties) %like% "verkoop.*", type := "sell"]  
+  dt[tolower(Acties) %like% "openbaar overnamebod", type := "sell"]  
+  dt[tolower(Acties) %like% "koop.*", type := "buy"]
+  dt[tolower(Acties) %like% "storting*" , type := "cash_in"]  
+  dt[tolower(Acties) %like% "opname" , type := "cash_out"]  
+  dt[tolower(Acties) %like% "transfer in.*" , type := "transfer_in"]
+  
+  dt = dt[type != ""]
+
+  # extract amount
+  dt[type %in% c("transfer_in", "buy", "sell"),
+      amount := as.numeric(str_extract(Acties, "\\d+"))]
+  # hack for very unusual openbaar overnamebod
+  dt[Acties %like% "overnameb" & yahoo == "TNET.BR", amount := 293]
   
   # filter columns & set proper names
   dt = dt[, .(symbol = yahoo, 
-               date = date,
-               type = Event,
-               amount = Aantal,
-               money = `Geboekt.bedrag.rekeningvaluta`)]
-  dt[tolower(type) %like% 'verkoop', type := "sell"]  
-  dt[tolower(type) %like% 'sell', type := "sell"]  
-  dt[tolower(type) %like% 'aankoop', type := "buy"]
-  dt[tolower(type) %like% 'buy', type := "buy"]  
-  dt[tolower(type) %like% 'ividend', type := "div"]  
-  dt[amount == "-", amount := ""]
-  dt[, amount := abs(as.numeric(amount))]
-  dt[, money := abs(money)]
-  dt[, account := "saxo"]
-
+              date = date,
+              type,
+              amount = abs(amount),
+              money =  abs(Boekingsbedrag))]
   
+  dt[, account := account_id]
+  dt[type %like% "transfer", money := NA]
+  
+  # make sure that + - + on the same date are aggregated
+  dt = dt[, .(amount = sum(amount), money = sum(money)), by = .(date, symbol, type, account)]
+  setcolorder(dt, c("symbol", "date", "type", "amount", "money", "account"))
+
+  # push it to the db
   safe_write_transaction_data(dt)
 }
 

@@ -58,6 +58,10 @@ tab_portfolio = tabItem(
       "Batch upload",
       box_explain_excel_upload(),
       box_full_dark(
+        radioButtons("radio_account", label = "Account",
+                     choices = list("New" = "new", "Existing" = "existing")),
+        textInput("new_account", "New Account"),
+        selectInput("select_account", "Existing account", choices=list("")),
         fileInput(
           "batch_portfolio_file",
           "Choose XLSX File",

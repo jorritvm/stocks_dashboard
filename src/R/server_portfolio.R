@@ -100,23 +100,36 @@ observeEvent(input$batch_portfolio_file, {
   notify("Upload finished.", 10)
 })
 
+observeEvent(tr(), { 
+  updateSelectInput(session, 
+                    inputId = "select_account", 
+                    choices = c(unique(tr()$account))) 
+})
+
 observeEvent(input$batch_portfolio_btn, {
   req(input$batch_portfolio_file)
   # we inform the user he has to update OHLC first!
   shinyalert(
     "Reminder!",
-    text = "Don't forget to update OHLC data before uploading a bolero dataset \n Continue?",
+    text = "Don't forget to update OHLC data before uploading a dataset \n Continue?",
     type = "warning",
     showCancelButton = TRUE,
-    inputId = "confirm_before_bolero"
+    inputId = "confirm_before_upload"
   )
 })
 
-observeEvent(input$confirm_before_bolero, {
-  if (input$confirm_before_bolero) {
+observeEvent(input$confirm_before_upload, {
+  if (input$confirm_before_upload) {
     # inform user that upload has started
     id = notify("Upload started.")
     on.exit(removeNotification(id), add = TRUE)
+    
+    # get account from input form
+    if (input$radio_account == "new") {
+      account = input$new_account
+    } else {
+      account = input$select_account
+    }
     
     # read and determine type of upload file
     dt = as.data.table(read.xlsx(input$batch_portfolio_file$datapath))
@@ -124,10 +137,10 @@ observeEvent(input$confirm_before_bolero, {
     
     # parse upload file
     if (file_source == "saxo") {
-      import_saxo_transaction_log(dt)
+      import_saxo_transaction_log(dt, account)
     }
     if (file_source == "bolero") {
-      import_bolero_transaction_log(dt, ohlc())
+      import_bolero_transaction_log(dt, ohlc(), account)
     }
     
     # inform user that the upload has finished 
