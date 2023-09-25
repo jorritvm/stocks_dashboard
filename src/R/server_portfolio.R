@@ -40,7 +40,7 @@ output$position_per_stock = renderPlotly({
 })
 
 
-output$positions_per_stock_broker_tbl =  renderDT(pos_sb(), 
+output$positions_per_stock_broker_tbl =  renderDT(pos_sb_round_numericals(pos_sb(), digits = 2), 
                                                   options = list("pageLength" = 50))
 
 
@@ -49,7 +49,7 @@ output$positions_per_stock_broker_tbl =  renderDT(pos_sb(),
 observeEvent(pos_sb(), { 
   updateSelectInput(session, 
                     inputId = "pf_broker", 
-                    choices = c("All", unique(pos_sb()$account))) 
+                    choices = c("All", unique(tr_ext()$account))) 
 })
 
 output$portfolio_position = renderPlotly({

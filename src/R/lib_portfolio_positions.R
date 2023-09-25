@@ -334,6 +334,32 @@ get_current_position_per_stock = function(pos_sb, profiles) {
 }
 
 
+#' round all numerical columns in pos_sb to n digits
+#'
+#' @param pos_sb 
+#' @param digits 
+#'
+#' @return a data.table with structure:
+#'         - date: Date
+#'         - account: character
+#'         - symbol: character
+#'         - amount_holding: numeric
+#'         - price: numeric
+#'         - position_euro: numeric
+#'         - mean_acquire_price: numeric
+#'         - mean_acquire_value: numeric
+#'         - performance_rel: numeric
+#'         - performance_abs: numeric
+#' @export
+pos_sb_round_numericals = function(pos_sb, digits = 2) {
+  dt = copy(pos_sb)
+  cols =  c("price", "position_euro", 
+            "mean_acquire_price", "mean_acquire_value", "performance_rel", 
+            "performance_abs") 
+  dt[, (cols) := lapply(.SD, round, digits), .SDcols = cols]
+  return(dt)
+}
+
 
 
 

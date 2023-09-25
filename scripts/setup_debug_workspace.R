@@ -43,14 +43,14 @@ pos_sb_evol_subset = get_one_stock_evolution("ABI.BR | Anheuser-Busch InBev SA/N
                                             "2Y",
                                             pos_sb_evol)
 
-# analysis:
+
+### having initialised the workspace, you can now pretty much run every function interactively
+# ...
+
+
+# ### analysis
 # current cash position everywhere:
 cash_b_evol[date == today()]
 
 # current stock position per stock per broker
 tr_ext[symbol != "" & !is.na(symbol)][order(date)][, .SD[nrow(.SD), .(amount_holding )], by = .(symbol, account)]
-
-cash = cash[, .SD[nrow(.SD)], by = .(date)]
-
-### having initialised the workspace, you can now pretty much run every function interactively
-# ...
