@@ -62,8 +62,10 @@ plot_portfolio_evolution = function(broker,
   
   # filter by time window
   w = window_to_start_end_dates(pf_window)
-  ppos = ppos[date >= w$start & date <= w$end]
-  cpos = cpos[date >= w$start & date <= w$end]
+  if (!is.null(w$start)) {
+    ppos = ppos[date >= w$start & date <= w$end]
+    cpos = cpos[date >= w$start & date <= w$end]
+  }
   
   # # aggregate
   # ppos_plotdata = ppos[, .(portfolio = sum(position_euro)), by = .(date)][order(date)]
@@ -95,9 +97,10 @@ plot_portfolio_evolution = function(broker,
       geom_area(position = "stack", alpha = 0.7) +
       facet_grid(rows = vars(variable), scales = "free") + 
       labs(y = "[EUR]") +     
-      scale_x_date(limits = c(w$start, w$end), 
-                   expand = c(0,0),
-                   date_breaks  = "1 month") +
+      scale_x_date(
+        # limits = c(w$start, w$end), # broken in last plotly release
+        # expand = c(0,0), # broken in last plotly release
+        date_breaks  = "1 month") +
       theme(axis.text.x = element_text(angle = 90))
   )
   

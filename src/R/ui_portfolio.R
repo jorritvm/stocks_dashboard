@@ -34,6 +34,7 @@ tab_portfolio = tabItem(
     tabPanel(
       "Performance",
       box_full_light(
+        h1("To be constructed"),
         plotlyOutput("total_performance"),
         title = "Total performance"
       )
