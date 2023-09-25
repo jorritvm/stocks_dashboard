@@ -3,9 +3,13 @@
 #' @return api key as character
 #' @export
 api_read_key = function() {
-  fpfn = file.path(dirname(here()), "private", "rapidapi_yahoo_key.txt")
-  apikey = read_file(fpfn)
-  return(apikey)
+  fpfn_env = here("config.env")
+  if (file.exists(fpfn_env)) {
+    dotenv::load_dot_env(fpfn_env)
+  }
+  key = Sys.getenv("r_stock_dashboard_api_key")
+
+  return(key)
 }
 
 

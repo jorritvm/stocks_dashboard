@@ -72,6 +72,10 @@ import_bolero_transaction_log = function(dt, ohlc, account_id) {
   # set account
   dt[, account := account_id]
   
+  # make sure that + - + on the same date are aggregated
+  dt = dt[, .(amount = sum(amount), money = sum(money)), by = .(date, symbol, type, account)]
+  setcolorder(dt, c("symbol", "date", "type", "amount", "money", "account"))
+  
   # write to db
   safe_write_transaction_data(dt)
 }
