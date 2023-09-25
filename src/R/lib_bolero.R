@@ -13,75 +13,67 @@
 #'
 #' @return nothing
 #' @export
-import_bolero_transaction_log = function(dt, ohlc) { 
+import_bolero_transaction_log = function(dt, ohlc, account_id) { 
   # fix types
-  dt[, date := ymd(numeric_date_to_iso8601(Datum))]
+  if (class(dt$Datum) == "numeric") {
+    dt[, date := ymd(numeric_date_to_iso8601(Transactiedatum))]
+  } else if (class(dt$Datum) == "character") {
+    dt[, date := dmy(Datum)]
+  }
   dt[, str_date := as.character(date)]
 
   # extract bolero description details
-  dt[, Event := ""]
-  dt[Details %like% "Aankoop", Event := "Aankoop"]
-  dt[Details %like% "Verkoop", Event := "Verkoop"]
-  dt[Details %like% "Provisionering|Terugstorting", Event := "cash_in"]
-  dt[Details %like% "Overschrijving naar klant", Event := "cash_out"]
+  dt[, type := ""]
+  dt[Transactie == "Aankoop (effecten)", type := "buy"]
+  # dt[Details %like% "Verkoop (effecten)", type := "sell"] # to do later
+  dt[Details %like% "Provisionering|Terugstorting", type := "cash_in"]
+  dt[Details == "Overschrijving naar klant", type := "cash_out"] 
   
-  if (any(is.na(dt$Event))) { print(dt) ; stop("Your bolero upload contains an unknown event") }
+  # keep only rows of interest
+  dt = dt[type != ""]
   
+  # fix RIC symbol 
   dt[, bolero_description := str_trim(gsub("Aankoop|Verkoop|Online", "", Details))]
-  
-  # fix symbol
   if (!"symbol" %in% names(dt)) dt[, symbol := NA]
   upload_bolero_yahoo_map = unique(dt[!is.na(symbol), .(bolero = bolero_description, yahoo = symbol)])
   full_bolero_yahoo_map = safe_write_bolero_map(upload_bolero_yahoo_map)
   dt = dt %>% left_join(full_bolero_yahoo_map, by = c("bolero_description" = "bolero"))
-  
-  # subset rows for stock operations
-  keep_these_types = c("Verkoop","Aankoop","Cashdividend","Herbeleggingsdividend")
-  dt_s = dt[Event %in% keep_these_types & Transactie %like% "effecten"]
-  
-  if (any(is.na(dt_s$yahoo))) { print(dt_s) ; stop("Your bolero upload contains new stocks that need a RIC mapping - complete the symbol column in the upload") }
   
   # bolero does not provide 'amount' so we have to guess it from the ohlc data
   # we use the days' middle price of the day
   mean_ohlc = ohlc %>% 
             mutate(price = (high + low) /2) %>%
             select(symbol, date, price)
-  # if you made a transaction today, value date is in the future, so you wont have OHLC data, 
-  # so we use the days' median price as price estimate
-  mean_ohlc = pad(mean_ohlc, 
-          end_val = max(dt_s$date), 
-          group = "symbol")
-  mean_ohlc[, price := na.locf.cb(price), by = symbol]
   
-  dt_s = dt_s %>% 
+  # # if you still made a transaction today, value date is in the future, so you wont have OHLC data, 
+  # # so we use the days' median price as price estimate
+  # mean_ohlc = pad(mean_ohlc, 
+  #         end_val = max(dt_s$date), 
+  #         group = "symbol")
+  # mean_ohlc[, price := na.locf.cb(price), by = symbol]
+  
+  dt = dt %>% 
     left_join(mean_ohlc, by = c("yahoo" = "symbol", "date")) %>%
-    mutate(Aantal = round(abs(Waarde) / price))
+    mutate(amount = round(abs(Waarde) / price))
   
-  dt_s = dt_s[, .(symbol = yahoo,
-                  date = date,
-                  type = Event,
-                  amount = Aantal,
-                  money = Waarde)]
+  # keep only relevant columns
+  dt = dt[, .(
+    symbol = yahoo,
+    date = date,
+    type,
+    amount,
+    money = Waarde
+  )]
                   
-  # subset rows for cash operations
-  dt_c = dt[Event %in% c("cash_in", "cash_out")]
-  dt_c = dt_c[, .(symbol, 
-                  date, 
-                  type = Event, 
-                  amount = NA, 
-                  money = Waarde)]
-
-  # add cash transactions again
-  dt_all = rbind(dt_s,
-                 dt_c)
-  dt_all[tolower(type) %like% 'verkoop', type := "sell"]
-  dt_all[tolower(type) %like% 'aankoop', type := "buy"]
-  dt_all[tolower(type) %like% 'ividend', type := "div"] # todo: distinguish dist & acc dividend?
-  dt_all[, amount := abs(as.numeric(amount))]
-  dt_all[, money := abs(money)]
-  dt_all[, account := "bolero"]
+  # abs numerics
+  dt[, amount := abs(as.numeric(amount))]
+  dt[, money := abs(money)]
   
-  safe_write_transaction_data(dt_all)
+  # set account
+  dt[, account := account_id]
+  
+  # write to db
+  safe_write_transaction_data(dt)
 }
 
 
