@@ -7,7 +7,7 @@ tr = reactivePoll(1000,
                   valueFunc = get_transactions)
 
 tr_ext = reactive({
-  extend_transactions_with_cumulative_data(tr())
+  extend_transactions_with_cumulative_data(tr(), ohlc())
 })
 
 cash_b_evol = reactive({

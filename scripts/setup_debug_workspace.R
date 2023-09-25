@@ -32,8 +32,7 @@ fx = get_all_fx()
 
 ohlc_euro =  convert_ohlc_to_euro(ohlc, profiles, fx)
 
-
-tr_ext = extend_transactions_with_cumulative_data(tr)
+tr_ext = extend_transactions_with_cumulative_data(tr, ohlc)
 
 cash_b_evol = get_cash_position_over_time_per_broker(tr_ext)
   
@@ -44,6 +43,14 @@ pos_sb_evol_subset = get_one_stock_evolution("ABI.BR | Anheuser-Busch InBev SA/N
                                             "2Y",
                                             pos_sb_evol)
 
+# analysis:
+# current cash position everywhere:
+cash_b_evol[date == today()]
+
+# current stock position per stock per broker
+tr_ext[symbol != "" & !is.na(symbol)][order(date)][, .SD[nrow(.SD), .(amount_holding )], by = .(symbol, account)]
+
+cash = cash[, .SD[nrow(.SD)], by = .(date)]
 
 ### having initialised the workspace, you can now pretty much run every function interactively
 # ...

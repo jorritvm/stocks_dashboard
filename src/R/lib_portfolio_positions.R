@@ -14,7 +14,7 @@
 #'         - amount_delta: numeric
 #'         - amount_holding: numeric
 #' @export
-extend_transactions_with_cumulative_data = function(tr) {
+extend_transactions_with_cumulative_data = function(tr, ohlc) {
   
   brokers = unique(tr$account)
   tr_ext_list = list()
@@ -34,10 +34,16 @@ extend_transactions_with_cumulative_data = function(tr) {
     trb[type %in% c('transfer_out', 'sell'), amount_delta := -1 * abs(amount)]
     trb[, amount_holding := cumsum(amount_delta), by = symbol]
     
-    # extend with acquire price & value
+    # extend with single share transaction value 
+    # for transactions the amount of shares and total price are known
+    # for transfers the share price is not known so take the day's close price
     trb[, transaction_price := 0]
-    trb[type %in% c("buy", "sell", "transfer_in", "transfer_out"), transaction_price := money / amount]
-    
+    trb[type %in% c("buy", "sell"), transaction_price := money / amount]
+    trb = trb %>% left_join(ohlc[, .(symbol, date, close)], by = c("symbol", "date"))
+    trb[type %in% c("transfer_in", "transfer_out"), transaction_price := close]
+    trb[, close:=NULL]
+        
+    # extend with mean acquire price and mean acquire value
     trb[, mean_acquire_price := 0]
     trb[, mean_acquire_value := 0]
     trb_per_stock = list()
@@ -57,7 +63,7 @@ extend_transactions_with_cumulative_data = function(tr) {
             map = (map *  previously_holding + transaction_price * newly_acquired) / currently_holding
             trb_s[j, mean_acquire_price := map]
             trb_s[j, mean_acquire_value := map * currently_holding]
-          } else if (trb_s[j, type] %in% c("sell","transfer_in")) {
+          } else if (trb_s[j, type] %in% c("sell", "transfer_out")) {
             currently_holding = trb_s[j, amount_holding]
             trb_s[j, mean_acquire_price := map]
             trb_s[j, mean_acquire_value := map * currently_holding]
@@ -91,22 +97,20 @@ get_cash_position_over_time_per_broker = function(tr_ext) {
     cash = tr_ext[account == broker][order(date)]
     
     # filter to positions that have impacted cash position
-    cash = cash[abs(cash_delta) > 0]
+    cash = cash[abs(cash_delta) != 0]
     
     # if multiple transactions were done on the same day we need to keep only the last one
     cash = cash[, .SD[nrow(.SD)], by = .(date)]
     
     # expand timeframe
-    start_date = min(tr_ext$date)
-    end_date = today()
-    dates = data.table(date = seq(start_date, end_date, by = "days"))
-    cp = merge(
-      x = dates,
-      y = cash[, .(date, cash_position)],
-      by = "date",
-      all.x = TRUE
-    )
-    
+    if (nrow(cash) == 0) {
+      cash =  data.table(date = today(), cash_position = 0)
+    } 
+    cp = pad(cash[, .(date, cash_position)], 
+             interval = "day", 
+             start_val = min(tr_ext$date), 
+             end_val = today())
+       
     # fill out NA
     cp[, cash_position := na.locf.0b(cash_position)]
     
