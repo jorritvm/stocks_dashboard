@@ -27,7 +27,7 @@ p = as.numeric(Sys.getenv("r_stock_dashboard_port"))
 options = list(host = h, port = p)
 
 # secure the server
-# ui <- secure_app(ui, enable_admin = TRUE) # activate when running live
+ui <- secure_app(ui, enable_admin = TRUE) # activate when running live
 
 # run the server
 options = c(options, list(shiny.autoreload = TRUE))
