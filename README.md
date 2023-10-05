@@ -25,19 +25,16 @@ This is a hobby project to get familiar with
 More information is to be found in `doc/stock_dashboard_documentation.pptx`
 
 ## How to run using docker
+* This assumes your database and credential store have already been created.
 * Modify Dockerfile ENV variables (host, port and yahoo api key)
 * Build the image
   * ```
-    host> docker build -t stocks_dashboard .
+    docker build -t stocks_dashboard .
     ```
-* Run the container in interactive mode to set up the credentials DB
+* Run the container, bind the desired port and mount the correct volumes
   * ```
-    host> docker container run -it -e shiny_user=your_user -e shiny_password=your_password -e cred_db_password=your_cred_db_password --name stocks_dashboard stocks_dashboard /bin/bash
-    cont> Rscript ../scripts/setup_credentials.R
-    cont> exit
+    docker container run -d -p 12345:9999 -e cred_db_password=my_cred_db_password -v %cd%\auth:/app/auth -v %cd%\db:/app/db --name stocks_dashboard stocks_dashboard
     ```
-* Run the container normally 
-
 
 ## Features & screenshots
 The tool can list currencies exchange rates:
