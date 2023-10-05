@@ -4,10 +4,16 @@ server = function(input, output, session) {
 # general
 ################################################################
   ### AUTHENTICATION
+  fpfn_env = here("../scripts/credentials.env")
+  if (file.exists(fpfn_env)) {
+    dotenv::load_dot_env(fpfn_env)
+  }
+  cred_db_password <- Sys.getenv("cred_db_password")
+  
   res_auth <- secure_server(
     check_credentials = check_credentials(
-      normalizePath("../db/credentials.sqlite"),
-      passphrase = key_get("R_stock_dashboard_shinymanager-key", NULL)
+      normalizePath("../auth/credentials.sqlite"),
+      passphrase = cred_db_password
     )
   )
   
