@@ -1,3 +1,6 @@
+> ⚠️ **Archived Private Repository**  
+> This project is no longer maintained. See [ARCHIVED.md](ARCHIVED.md) for details.  
+
 # Stocks_Dashboard
 Dashboard to track stock OHLC, FX, and portfolio
 
